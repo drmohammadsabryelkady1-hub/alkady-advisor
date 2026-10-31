@@ -2136,6 +2136,8 @@ details.ck-fold[open] > summary { margin-bottom: 8px; }
 :root[data-theme="dark"] .st-ci { color: #0A111F; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .st-ci { color: #0A111F; } }
 .st-crit li.no { color: var(--st-red); font-weight: 700; }
+.st-crit li.info .st-ci { background: var(--st-mute); font-style: italic; }
+.st-crit li.info { color: var(--st-ink2); }
 .st-crit-none, .st-ref { margin: 0; color: var(--st-mute); font-size: .9em; }
 .st-group { display: flex; flex-direction: column; gap: 10px; }
 .st-gh { display: flex; align-items: center; gap: 10px; margin: 6px 0 0; font-family: var(--st-f-display); font-size: 1em; text-transform: uppercase; letter-spacing: .07em; color: var(--st-ink2); }
@@ -9591,9 +9593,211 @@ var ST_GENTLE = {
 };
 /* ECOG range enrolled by the pivotal trials of the triple-negative and HER2-positive options (protocol eligibility) */
 var ST_TRIAL_ECOG = { KN355: [0, 1], ASC04: [0, 1], ASC03: [0, 1], TB02: [0, 1], ASCENT: [0, 1], OLYAD: [0, 1], EMBR: [0, 2], DB04TN: [0, 1],
-  CLEO: [0, 1], PATINA: [0, 1], HC05: [0, 1], DB09: [0, 1], DB03: [0, 1], DB02: [0, 1], HC1: [0, 1], EMILIA: [0, 1] };
+  CLEO: [0, 1], PATINA: [0, 1], HC05: [0, 1], DB09: [0, 1], DB03: [0, 1], DB02: [0, 1], HC1: [0, 1], EMILIA: [0, 1], TNT: [0, 2] };
 var ST_TIER = { preferred: ["Preferred", "pref"], alternative: ["Other recommended", "other"], consider: ["Selected patients", "cons"], monitor: ["During first-line therapy", "mon"], later: ["Keep for a later line", "later"],
   pref: ["Preferred", "pref"], other: ["Other recommended", "other"], cons: ["Selected patients", "cons"], caut: ["Use with caution", "caut"], no: ["Not an option now", "no"] };
+/* toxicity cautions are shown as red flags; other cautions (sequencing, labels, eligibility) stay orange */
+var ST_TOXIC = /\b(ILD|pneumonitis|QTc?|bradycard\w*|heart failure|LVEF|cardi\w*|HbA1c|diabet\w*|glucose|hyperglyc\w*|neutropeni\w*|febrile|hepat\w*|liver|bilirubin|transaminase\w*|renal|creatinine|CrCl|kidney|stomatitis|diarrho?ea|bleeding|thrombocytopeni\w*|neuropath\w*)\b/i;
+function stToxic(t) { return ST_TOXIC.test(String(t || "")); }
+
+/* ---------- curated eligibility of the pivotal triple-negative and HER2-positive trials ----------
+   Registry records (ClinicalTrials.gov, jRCT, EU-CTR), protocols, publications and FDA labels; verified 31 Oct 2026.
+   Row: [kind, criterion, test(state, section) -> [status, patient value]]; status ok | no | warn (to check) | info */
+var ST_LN = { "1": "first line", "2": "second line", "3": "third line", "4": "fourth line or later" };
+var ST_CPS = { ge10: "PD-L1 CPS ≥10", lt10: "PD-L1 CPS <10", unk: "PD-L1 not tested" };
+var ST_BR = { none: "no brain metastases", stable: "treated, stable brain metastases", active: "active brain metastases" };
+var ST_PRI = { io: "PD-1/PD-L1 inhibitor", sg: "sacituzumab govitecan", dato: "Dato-DXd", tdxd: "T-DXd", parp: "PARP inhibitor", plat: "platinum",
+  thp: "trastuzumab + pertuzumab", tuc: "tucatinib", tdm1: "T-DM1" };
+function stLn(s) { return ST_LN[s.line] || "line " + s.line; }
+function stEc(lo, hi) { return function (s) { var e = +s.ecog; return [e >= lo && e <= hi ? "ok" : "no", "ECOG " + e]; }; }
+function stAsk(v) { return function () { return ["warn", v || "not entered"]; }; }
+function stNote(t) { return ["Note", t, function () { return ["info", ""]; }]; }
+function stL1(s) { return [s.line === "1" ? "ok" : "no", stLn(s)]; }
+function stDfi(s) { return [s.early ? "no" : "ok", s.early ? "relapse <6 months after curative therapy" : "≥6 months, or de novo"]; }
+function stIld(s) { return [s.ild ? "no" : "ok", s.ild ? "prior ILD / pneumonitis" : "none recorded"]; }
+function stPri(keys) {
+  return function (s) {
+    var p = s.prior || {}, hit = keys.filter(function (k) { return p[k]; });
+    return hit.length ? ["no", "already received: " + hit.map(function (k) { return ST_PRI[k] || k; }).join(", ")] : ["ok", "none recorded for metastatic disease"];
+  };
+}
+function stLvef(s) {
+  var v = parseFloat(s.lvef);
+  if (!isFinite(v)) return ["warn", "not entered"];
+  return [v >= 50 ? "ok" : "no", v >= 50 ? "LVEF ≥50%" : v >= 40 ? "LVEF 40–49%" : "LVEF <40%"];
+}
+function stLate(s) { return s.early ? ["no", "relapse ≤6–12 months after (neo)adjuvant anti-HER2 therapy"] : ["ok", "late relapse, or de novo"]; }
+function stLateCheck(v) { return function (s) { return s.early ? ["warn", v] : ["ok", "late relapse, or de novo"]; }; }
+function stBrainNo(s) { return [s.brain === "active" ? "no" : "ok", ST_BR[s.brain] || "not entered"]; }
+function stNotIO(s) {
+  if (s.cps === "lt10") return ["ok", ST_CPS.lt10];
+  if (s.io === "no") return ["ok", "PD-1/PD-L1 inhibitor not possible"];
+  return s.cps === "ge10" ? ["no", "CPS ≥10 and a checkpoint inhibitor is possible"] : ["warn", ST_CPS.unk];
+}
+var ST_TOP1 = "Prior topoisomerase-1 inhibitor or TOP1-payload ADC (sacituzumab govitecan, T-DXd, Dato-DXd)";
+var ST_CRIT = {
+  KN355: [
+    ["Inclusion", "No prior chemotherapy for inoperable locally recurrent or metastatic TNBC", stL1],
+    ["Inclusion", "≥6 months from completing curative-intent treatment to recurrence; de novo metastatic disease eligible", stDfi],
+    ["Inclusion", "ECOG 0–1", stEc(0, 1)],
+    ["Inclusion", "Central PD-L1 testing (22C3) on a new tumour sample; every CPS level enrolled", function (s) { return [s.cps === "unk" ? "warn" : "ok", ST_CPS[s.cps]]; }],
+    ["FDA label", "Pembrolizumab + chemotherapy requires PD-L1 CPS ≥10, where the overall-survival benefit was seen", function (s) { return [s.cps === "ge10" ? "ok" : s.cps === "lt10" ? "no" : "warn", ST_CPS[s.cps]]; }],
+    ["Exclusion", "Prior anti-PD-1, anti-PD-L1 or anti-PD-L2 therapy in any setting, including (neo)adjuvant pembrolizumab", function (s) { return (s.prior || {}).io ? ["no", "PD-1/PD-L1 inhibitor given for metastatic disease"] : ["warn", "check (neo)adjuvant pembrolizumab"]; }],
+    ["Exclusion", "Autoimmune disease that needed systemic treatment in the past 2 years", function (s) { return s.io === "no" ? ["no", "PD-1/PD-L1 inhibitor not possible"] : ["ok", "no contraindication recorded"]; }],
+    ["Exclusion", "Pneumonitis that needed steroids, or current pneumonitis / ILD", stIld],
+    ["Exclusion", "Active CNS metastases or carcinomatous meningitis (treated, stable metastases allowed)", stAsk()]
+  ],
+  ASC04: [
+    ["Inclusion", "No prior systemic therapy for advanced TNBC", stL1],
+    ["Inclusion", "PD-L1 CPS ≥10 (22C3), central testing", function (s) { return [s.cps === "ge10" ? "ok" : s.cps === "lt10" ? "no" : "warn", ST_CPS[s.cps]]; }],
+    ["Inclusion", "≥6 months since curative-intent treatment; de novo disease eligible", stDfi],
+    ["Inclusion", "ECOG 0–1", stEc(0, 1)],
+    stNote("Prior (neo)adjuvant anti-PD-(L)1 was allowed when the 6-month interval was met"),
+    ["Exclusion", ST_TOP1, stPri(["sg", "dato", "tdxd"])]
+  ],
+  ASC03: [
+    ["Inclusion", "Untreated inoperable locally advanced or metastatic TNBC", stL1],
+    ["Inclusion", "Not a PD-(L)1 candidate: CPS <10, or CPS ≥10 after (neo)adjuvant anti-PD-(L)1 or with a comorbidity that bars checkpoint inhibitors", stNotIO],
+    ["Inclusion", "≥6 months since curative-intent treatment (endocrine therapy excepted); de novo disease eligible", stDfi],
+    ["Inclusion", "ECOG 0–1", stEc(0, 1)],
+    ["Exclusion", ST_TOP1, stPri(["sg", "dato", "tdxd"])]
+  ],
+  TB02: [
+    ["Inclusion", "Untreated advanced TNBC", stL1],
+    ["Inclusion", "Not a PD-(L)1 candidate: PD-L1-negative, relapse after early-stage PD-(L)1, a comorbidity, or no access", stNotIO],
+    stNote("No minimum disease-free interval: relapse within 6 months was eligible (about 15% of patients)"),
+    ["Inclusion", "ECOG 0–1, with no deterioration in the previous 2 weeks", stEc(0, 1)],
+    ["Exclusion", "Non-infectious ILD / pneumonitis that needed steroids, current ILD, or suspected ILD on screening imaging", stIld],
+    ["Exclusion", "Prior topoisomerase-1 inhibitor (including ADCs) or TROP2-directed therapy", stPri(["sg", "dato", "tdxd"])],
+    stNote("Treated, stable, asymptomatic brain metastases allowed off steroids and anticonvulsants; leptomeningeal disease excluded")
+  ],
+  ASCENT: [
+    ["Inclusion", "≥2 prior chemotherapy regimens for advanced TNBC; one may be (neo)adjuvant if disease progressed within 12 months", function (s) {
+      var n = +s.line;
+      if (n >= 3) return ["ok", stLn(s)];
+      if (n === 2) return s.early ? ["ok", "second line · relapse <6 months after curative therapy"] : ["warn", "second line · counts only if relapse ≤12 months after (neo)adjuvant chemotherapy"];
+      return ["no", stLn(s)];
+    }],
+    ["Inclusion", "Prior taxane in any setting", stAsk()],
+    ["Inclusion", "ECOG 0–1", stEc(0, 1)],
+    stNote("Treated, stable brain metastases allowed: capped at 15% and excluded from the primary analysis")
+  ],
+  OLYAD: [
+    ["Inclusion", "Deleterious germline BRCA1/2 variant", function (s) {
+      var g = s.gb === true || s.gb === "yes";
+      return [g ? "ok" : s.gb === "unk" ? "warn" : "no", g ? "gBRCA pathogenic variant" : s.gb === "unk" ? "result pending" : "no gBRCA variant recorded"];
+    }],
+    ["Inclusion", "HER2-negative (triple-negative or HR-positive)", function (s, sec) { return sec === "her2" ? ["no", "HER2-positive"] : ["ok", "triple-negative"]; }],
+    ["Inclusion", "No more than 2 prior chemotherapy lines for metastatic disease", function (s) { return [+s.line <= 3 ? "ok" : "no", stLn(s)]; }],
+    ["Inclusion", "Prior anthracycline and taxane, (neo)adjuvant or metastatic", stAsk()],
+    ["Inclusion", "ECOG 0–1", stEc(0, 1)],
+    ["Exclusion", "Progression during platinum for advanced disease; (neo)adjuvant platinum must have ended ≥12 months earlier", function (s) {
+      return (s.prior || {}).plat ? ["warn", "platinum given for metastatic disease: eligible only without progression on it"] : ["warn", "check (neo)adjuvant carboplatin timing"];
+    }],
+    ["Exclusion", "Prior PARP inhibitor", stPri(["parp"])],
+    stNote("Treated brain metastases allowed (≥2 weeks after radiotherapy)")
+  ],
+  TNT: [
+    ["Inclusion", "ER−/PR−/HER2− metastatic or recurrent locally advanced breast cancer, or a gBRCA1/2 carrier of any receptor status", function () { return ["ok", "triple-negative"]; }],
+    ["Inclusion", "ECOG 0–2", stEc(0, 2)],
+    ["Exclusion", "Prior chemotherapy for metastatic disease other than an anthracycline", function (s) { return s.line === "1" ? ["ok", "first line"] : ["warn", stLn(s) + ": eligible only if the earlier line was an anthracycline"]; }],
+    ["Exclusion", "Any prior platinum, including (neo)adjuvant carboplatin", function (s) { return (s.prior || {}).plat ? ["no", "platinum given for metastatic disease"] : ["warn", "check (neo)adjuvant carboplatin, e.g. the KEYNOTE-522 regimen"]; }],
+    ["Exclusion", "Adjuvant taxane within the previous 12 months", function (s) { return ["warn", s.early ? "relapse <6 months: check adjuvant taxane timing" : "check adjuvant taxane timing"]; }],
+    stNote("Treated, stable brain metastases allowed")
+  ],
+  DB04TN: [
+    ["Inclusion", "HER2-low: IHC 1+, or 2+ with negative ISH (central); never HER2-positive", function (s) { return s.her2 === "low" ? ["ok", "HER2-low"] : ["no", s.her2 === "0+" ? "HER2 0+ (ultralow)" : "HER2 0"]; }],
+    ["Inclusion", "1–2 prior chemotherapy lines for metastatic disease; recurrence ≤6 months after adjuvant chemotherapy counts as one", function (s) {
+      var n = +s.line;
+      if (n === 2 || n === 3) return ["ok", stLn(s)];
+      return n === 1 && s.early ? ["ok", "first line · relapse <6 months after adjuvant chemotherapy"] : ["no", stLn(s)];
+    }],
+    ["Inclusion", "ECOG 0–1", stEc(0, 1)],
+    ["Inclusion", "LVEF ≥50%", stAsk()],
+    ["Exclusion", "Non-infectious ILD that needed steroids, current ILD, or suspected ILD at screening", stIld],
+    ["Exclusion", "Any prior anti-HER2 therapy", stPri(["tdxd"])],
+    stNote("Treated, asymptomatic brain metastases allowed off steroids and anticonvulsants (≥2 weeks after WBRT); untreated or symptomatic excluded")
+  ],
+  CLEO: [
+    ["Inclusion", "No prior chemotherapy or anti-HER2 therapy for metastatic disease (one prior hormonal regimen allowed)", stL1],
+    ["Inclusion", "≥12 months from the end of (neo)adjuvant therapy to metastatic diagnosis", stLate],
+    ["Inclusion", "LVEF ≥50%", stLvef],
+    ["Inclusion", "ECOG 0–1", stEc(0, 1)],
+    ["Exclusion", "CNS metastases", function (s) { return [s.brain === "none" ? "ok" : "no", ST_BR[s.brain] || "not entered"]; }],
+    ["Exclusion", "LVEF fall below 50% during prior trastuzumab; cumulative doxorubicin >360 mg/m²", function (s) { return s.hf ? ["no", "heart failure"] : ["warn", "check prior cardiac events and anthracycline dose"]; }],
+    ["Exclusion", "Prior HER2 tyrosine-kinase inhibitor in any setting", stPri(["tuc"])]
+  ],
+  PATINA: [
+    ["Inclusion", "HR-positive, HER2-positive metastatic breast cancer", function (s) { return [s.hr === "pos" ? "ok" : "no", s.hr === "pos" ? "ER/PR-positive" : "ER/PR-negative"]; }],
+    ["Inclusion", "First-line induction: taxane (or vinorelbine with trastuzumab alone) + trastuzumab ± pertuzumab for 4–8 cycles, without progression", function (s) { return s.line === "1" ? ["warn", "first line: check induction completed without progression"] : ["no", stLn(s)]; }],
+    ["Inclusion", "≥6 months from the end of (neo)adjuvant anti-HER2 therapy to metastatic diagnosis", stLateCheck("early relapse: check the interval")],
+    ["Inclusion", "ECOG 0–1", stEc(0, 1)],
+    ["Inclusion", "LVEF ≥50%", stLvef],
+    ["Exclusion", "Prior CDK4/6 inhibitor", stAsk()],
+    ["Exclusion", "Symptomatic or progressing brain metastases (asymptomatic allowed with extracranial disease, off steroids, ≥3 weeks after radiotherapy)", function (s) { return s.brain === "active" ? ["warn", "active brain metastases: eligible only if asymptomatic and not progressing"] : ["ok", ST_BR[s.brain] || "not entered"]; }]
+  ],
+  HC05: [
+    ["Inclusion", "After first-line induction: trastuzumab + pertuzumab + taxane for 4–8 cycles without progression (<6 taxane cycles only if stopped for toxicity)", function (s) { return s.line === "1" ? ["warn", "first line: check induction completed without progression"] : ["no", stLn(s)]; }],
+    ["Inclusion", "If recurrent, ≥6 months off (neo)adjuvant trastuzumab / pertuzumab", stLateCheck("early relapse: check the interval")],
+    ["Inclusion", "ECOG 0–1", stEc(0, 1)],
+    ["Inclusion", "Brain metastases allowed if untreated and asymptomatic (no immediate local therapy needed) or treated and not progressing", function (s) { return s.brain === "active" ? ["warn", "active brain metastases: eligible only without need for immediate local therapy"] : ["ok", ST_BR[s.brain] || "not entered"]; }],
+    ["Exclusion", "Prior HER2 / EGFR tyrosine-kinase inhibitor (extended-adjuvant neratinib allowed)", stPri(["tuc"])]
+  ],
+  DB09: [
+    ["Inclusion", "No prior chemotherapy or HER2-directed therapy for advanced disease (one endocrine line allowed)", stL1],
+    ["Inclusion", "(Neo)adjuvant chemotherapy or HER2-directed therapy completed >6 months before metastatic diagnosis", stLateCheck("early relapse: eligible only beyond 6 months")],
+    ["Inclusion", "ECOG 0–1", stEc(0, 1)],
+    ["Exclusion", "Active or prior documented ILD / pneumonitis, or suspected ILD at screening", stIld],
+    ["Exclusion", "Clinically active brain metastases (inactive, or treated and asymptomatic, allowed)", stBrainNo]
+  ],
+  DB03: [
+    ["Inclusion", "Prior trastuzumab + taxane for advanced disease, or progression ≤6 months after (neo)adjuvant trastuzumab + taxane", function (s) {
+      return +s.line >= 2 ? ["ok", stLn(s)] : s.early ? ["warn", "first line · early relapse: eligible if ≤6 months"] : ["no", "first line"];
+    }],
+    ["Inclusion", "ECOG 0–1", stEc(0, 1)],
+    ["Inclusion", "LVEF ≥50%", stLvef],
+    ["Exclusion", "Non-infectious ILD that needed steroids, current ILD, or suspected ILD at screening", stIld],
+    ["Exclusion", "Prior anti-HER2 antibody–drug conjugate for metastatic disease", stPri(["tdxd", "tdm1"])],
+    ["Exclusion", "Clinically active brain metastases (untreated asymptomatic, or treated and off steroids ≥2 weeks after WBRT, allowed)", stBrainNo]
+  ],
+  HC1: [
+    ["Inclusion", "Prior trastuzumab, pertuzumab and T-DM1", function (s) {
+      var p = s.prior || {}, miss = [];
+      if (!p.thp) miss.push("trastuzumab + pertuzumab");
+      if (!p.tdm1) miss.push("T-DM1");
+      return miss.length ? ["no", "not recorded: " + miss.join(", ")] : ["ok", "all three received"];
+    }],
+    ["Inclusion", "ECOG 0–1", stEc(0, 1)],
+    ["Inclusion", "LVEF ≥50%", stLvef],
+    ["Inclusion", "Brain metastases allowed: untreated (not needing immediate local therapy), treated and stable, or treated and progressing", function (s) { return ["ok", ST_BR[s.brain] || "not entered"]; }],
+    ["Exclusion", "Untreated brain lesion >2 cm, or dexamethasone >2 mg/day for brain symptoms", function (s) { return s.brain === "active" ? ["warn", "active brain metastases: check lesion size and steroid dose"] : ["ok", ST_BR[s.brain] || "not entered"]; }],
+    ["Exclusion", "Capecitabine for metastatic disease ((neo)adjuvant allowed if ≥12 months earlier)", stAsk()],
+    ["Exclusion", "Lapatinib within 12 months; neratinib or afatinib at any time", stAsk()]
+  ],
+  EMILIA: [
+    ["Inclusion", "Prior trastuzumab + taxane, with progression on therapy for advanced disease or within 6 months of early-stage treatment", function (s) {
+      return +s.line >= 2 ? ["ok", stLn(s)] : s.early ? ["warn", "first line · early relapse: eligible if within 6 months"] : ["no", "first line"];
+    }],
+    ["Inclusion", "ECOG 0–1", stEc(0, 1)],
+    ["Inclusion", "LVEF ≥50%", stLvef],
+    ["Exclusion", "Prior T-DM1, lapatinib or capecitabine", stPri(["tdm1"])],
+    ["Exclusion", "Symptomatic brain metastases, or brain treatment within 2 months", function (s) {
+      return s.brain === "active" ? ["no", ST_BR.active] : s.brain === "stable" ? ["warn", "treated brain metastases: eligible if treated >2 months ago"] : ["ok", ST_BR.none];
+    }]
+  ]
+};
+function stFitMX(sec, k, s) {
+  var R = ST_CRIT[k];
+  if (!R || !s) return null;
+  var rows = [], n = { ok: 0, no: 0, warn: 0 };
+  R.forEach(function (r) {
+    var x;
+    try { x = r[2](s, sec) || ["warn", ""]; } catch (err) { x = ["warn", ""]; }
+    if (n[x[0]] != null) n[x[0]]++;
+    rows.push({ kind: r[0], t: r[1], st: x[0], v: x[1] });
+  });
+  return { k: k, f: { has: true, ok: n.ok, no: n.no, warn: n.warn, rows: rows } };
+}
 
 function stShort(t, n) {
   t = String(t || "").trim();
@@ -9631,7 +9835,7 @@ function stOptsHR(e, N) {
     var red = [], amber = [];
     (o.cautions || []).forEach(function (c) {
       if (!c || c.level === "info") return;
-      (c.red || c.level === "stop" ? red : amber).push(stClean(c.title));
+      (c.red || c.level === "stop" || stToxic(c.title) ? red : amber).push(stClean(c.title));
     });
     var lead = (o.trials || [])[0] || "", fit = null;
     /* the criteria shown are those of the lead (pivotal) trial; another listed trial only when the lead has none */
@@ -9649,16 +9853,18 @@ function stOptsHR(e, N) {
   var bsc = N.opts.filter(function (o) { return o.id === "bsc"; })[0];
   return { list: list, avoid: avoid, notes: [], bscWhy: bsc ? bsc.why : "" };
 }
-function stOptsMX(sec, R) {
+function stOptsMX(sec, R, s) {
   var cat = sec === "tn" ? MX_T : MX_H, bscWhy = "";
   var list = [];
   mxSortOpts(R.opts.slice()).forEach(function (o) {
     if (o.k === "bsc") { bscWhy = o.why; return; }
     var d = cat[o.k] || {}, red = [], amber = [], ok = [];
-    (o.fl || []).forEach(function (f) { (f[0] === "bad" ? red : f[0] === "warn" ? amber : ok).push(stClean(f[1])); });
-    var tr = (d.tr || []).filter(function (k) { return ce[k]; });
-    list.push({ id: o.k, name: d.name || o.k, tier: o.tier, tierLab: o.lab, why: o.why, red: red, amber: amber, ok: ok, lead: tr[0] || "",
-      lvl: ckOptLvl(sec, o.k), esmo: ckOptEsmo(sec, o.k), cat: d.cat && d.cat !== "—" ? d.cat : "", fit: null });
+    (o.fl || []).forEach(function (f) { (f[0] === "bad" || (f[0] === "warn" && stToxic(f[1])) ? red : f[0] === "warn" ? amber : ok).push(stClean(f[1])); });
+    var tr = (d.tr || []).filter(function (k) { return ce[k]; }), lead = tr[0] || "";
+    /* sacituzumab after first line: ASCENT, not ASCENT-03, is the pivotal trial */
+    if (sec === "tn" && o.k === "sg" && s && +s.line > 1 && ce.ASCENT) lead = "ASCENT";
+    list.push({ id: o.k, name: d.name || o.k, tier: o.tier, tierLab: o.lab, why: o.why, red: red, amber: amber, ok: ok, lead: lead, trials: tr,
+      lvl: ckOptLvl(sec, o.k), esmo: ckOptEsmo(sec, o.k), cat: d.cat && d.cat !== "—" ? d.cat : "", fit: stFitMX(sec, lead, s) });
   });
   return { list: list, avoid: [], notes: (R.notes || []).filter(function (n) { return n[0] !== "info" || /\btest|\bnot known|\bpending|\bEnter\b/i.test(n[1]); }).map(function (n) { return [n[0], stClean(n[1])]; }), bscWhy: bscWhy };
 }
@@ -9668,7 +9874,12 @@ function stApplyEcog(sec, ecog, D) {
     o.gentle = ST_GENTLE[sec].indexOf(o.id) >= 0;
     var r = stEcogRange(sec, o.lead);
     o.ecogOut = !!(r && ecog > r[1]);
-    if (o.ecogOut) o.red.unshift("ECOG " + ecog + ": outside the " + (ce[o.lead] ? ce[o.lead].name : "trial") + " population (ECOG " + r[0] + "–" + r[1] + ")");
+    /* an option resting on several trials (olaparib or talazoparib): within one trial's ECOG range is a caution, not a stop */
+    var alt = o.ecogOut && sec !== "hr" ? (o.trials || []).filter(function (k) { var q = ST_TRIAL_ECOG[k]; return k !== o.lead && q && ecog <= q[1]; })[0] : null;
+    if (alt) {
+      o.ecogOut = false;
+      o.amber.unshift("ECOG " + ecog + ": within the " + ce[alt].name + " population (ECOG " + ST_TRIAL_ECOG[alt][0] + "–" + ST_TRIAL_ECOG[alt][1] + "); outside " + (ce[o.lead] ? ce[o.lead].name : "the lead trial") + " (ECOG " + r[0] + "–" + r[1] + ")");
+    } else if (o.ecogOut) o.red.unshift("ECOG " + ecog + ": outside the " + (ce[o.lead] ? ce[o.lead].name : "trial") + " population (ECOG " + r[0] + "–" + r[1] + ")");
   });
   var trial = D.list.filter(function (o) { return o.id === "trial"; });
   var main = D.list.filter(function (o) { return o.id !== "trial"; });
@@ -9779,7 +9990,8 @@ function StLeftH2(pr) {
 /* ---------- right: the decision ---------- */
 function StCrit(pr) {
   var o = pr.o, f = o.fit, rows = [];
-  if (f && f.f && f.f.has) {
+  if (f && f.f && f.f.rows) rows = f.f.rows.map(function (c) { return [c, c.kind]; });
+  else if (f && f.f && f.f.has) {
     rows = f.f.inc.map(function (c) { return [c, "Inclusion"]; }).concat(f.f.exc.map(function (c) { return [c, "Exclusion"]; }))
       .filter(function (z) { return z[0].st !== "chk"; });
   }
@@ -9789,7 +10001,7 @@ function StCrit(pr) {
     rows.length ? ph("ul", null, rows.map(function (z, i) {
       var c = z[0];
       return ph("li", { key: i, className: c.st },
-        ph("span", { className: "st-ci", "aria-label": c.st === "ok" ? "met" : c.st === "no" ? "not met" : "to check" }, c.st === "ok" ? "✓" : c.st === "no" ? "✗" : "?"),
+        ph("span", { className: "st-ci", "aria-label": c.st === "ok" ? "met" : c.st === "no" ? "not met" : c.st === "info" ? "note" : "to check" }, c.st === "ok" ? "✓" : c.st === "no" ? "✗" : c.st === "info" ? "i" : "?"),
         ph("span", null, ph("small", null, z[1] + " · "), c.t, c.v ? ph("em", null, " — patient: " + c.v) : null));
     })) : ph("p", { className: "st-crit-none" }, o.ecogOut ? "This patient's ECOG is outside the trial's enrolment range." : "Enrolment criteria: see the trial record; this patient's ECOG is within the trial's range."),
     t && t.ref ? ph("p", { className: "st-ref" }, t.ref) : null);
@@ -9919,12 +10131,12 @@ function StPage(pr) {
     demos = pr.cases.map(function (c) { return { l: c.label + " · " + c.sub, go: function () { pr.load(c); } }; });
   } else if (sec === "tn") {
     var ts = MX.tnbc || mxTnbcInit(e);
-    D = stOptsMX("tn", mxTnbcOpts(ts)); summary = stSummaryTN(ts);
+    D = stOptsMX("tn", mxTnbcOpts(ts), ts); summary = stSummaryTN(ts);
     left = ph(StLeftTN, { p: e });
     demos = ST_DEMO_TN.map(function (c) { return { l: c.l, go: function () { stSetStore("tnbc", Object.assign({}, c.s)); } }; });
   } else {
     var hs = MX.her2 || mxHer2Init(e);
-    D = stOptsMX("her2", mxHer2Opts(hs)); summary = stSummaryH2(hs);
+    D = stOptsMX("her2", mxHer2Opts(hs), hs); summary = stSummaryH2(hs);
     left = ph(StLeftH2, { p: e });
     demos = ST_DEMO_H2.map(function (c) { return { l: c.l, go: function () { stSetStore("her2", Object.assign({}, c.s)); } }; });
   }
