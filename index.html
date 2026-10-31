@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Alkady Breast Cancer Advisor</title>
+<meta name="description" content="Metastatic breast cancer treatment decisions built on NCCN v8.2026 and ESMO 2026: patient criteria on the left, the treatment decision on the right.">
+<meta property="og:title" content="Alkady Breast Cancer Advisor">
+<meta property="og:description" content="Press a biomarker, watch the treatment decision change. NCCN v8.2026 · ESMO 2026.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Source+Sans+3:wght@400;600;700&display=swap">
+<script>try{var t=localStorage.getItem("st_theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<style>
+:root{--bg:#F5F4EF;--card:#FFFFFF;--ink:#14213D;--soft:#4A5568;--line:#DCD8CE;--hr:#BE185D;--her2:#4338CA;--tn:#0F766E;--bsc:#0E7490;--red:#B91C1C;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0E1522;--card:#162033;--ink:#EEF2F7;--soft:#B6C1D1;--line:#2A3850;--hr:#F472B6;--her2:#A5B4FC;--tn:#5EEAD4;--bsc:#67E8F9;--red:#FCA5A5;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0E1522;--card:#162033;--ink:#EEF2F7;--soft:#B6C1D1;--line:#2A3850;--hr:#F472B6;--her2:#A5B4FC;--tn:#5EEAD4;--bsc:#67E8F9;--red:#FCA5A5;color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 18px/1.55 "Source Sans 3",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;padding:0 16px}
+.wrap{max-width:1080px;margin:0 auto;padding-block:max(28px,env(safe-area-inset-top)) max(40px,env(safe-area-inset-bottom))}
+.brand{font:700 20px/1.2 Archivo,system-ui,Arial,sans-serif;letter-spacing:.01em;margin:0}
+.brand b{color:var(--hr);font-weight:800}
+.rule{height:3px;background:var(--hr);border:0;margin:14px 0 36px;opacity:.9}
+h1{font:800 clamp(34px,6vw,56px)/1.05 Archivo,system-ui,Arial,sans-serif;margin:0 0 12px;text-wrap:balance;letter-spacing:-.01em}
+.lede{font-size:clamp(19px,2.4vw,23px);color:var(--soft);margin:0 0 32px;max-width:40em}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.card{display:flex;flex-direction:column;gap:10px;min-width:0;background:var(--card);border:1px solid var(--line);border-top:8px solid var(--c);border-radius:16px;padding:22px 22px 20px;color:inherit;text-decoration:none;transition:transform .12s ease,box-shadow .12s ease}
+.card:hover,.card:focus-visible{transform:translateY(-2px);box-shadow:0 10px 26px rgba(20,33,61,.12);outline:none}
+.card:focus-visible{box-shadow:0 0 0 3px var(--c)}
+.card .k{font:800 30px/1.1 Archivo,system-ui,Arial,sans-serif;color:var(--c)}
+.card .n{font-weight:600;margin:0}
+.card .d{color:var(--soft);margin:0;font-size:16.5px}
+.card .go{margin-top:auto;font:700 17px/1 Archivo,system-ui,Arial,sans-serif;color:var(--c)}
+.hr{--c:var(--hr)}.her2{--c:var(--her2)}.tn{--c:var(--tn)}
+h2{font:700 15px/1.2 Archivo,system-ui,Arial,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--soft);margin:44px 0 14px}
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;counter-reset:s}
+.steps li{counter-increment:s;display:flex;gap:14px;align-items:flex-start;min-width:0}
+.steps li::before{content:counter(s);flex:none;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--bsc);color:var(--card);font:800 18px/1 Archivo,system-ui,Arial,sans-serif}
+.steps b{display:block;font-weight:700}
+.steps span{color:var(--soft);font-size:16.5px}
+footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--line);color:var(--soft);font-size:15.5px;display:grid;gap:8px}
+footer strong{color:var(--ink)}
+@media (max-width:820px){.cards,.steps{grid-template-columns:1fr}.card .k{font-size:28px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="brand"><b>ALKADY</b> Breast Cancer Advisor</p>
+  <hr class="rule">
+  <h1>Metastatic breast cancer, one decision at a time</h1>
+  <p class="lede">Patient criteria on the left, the treatment decision on the right. Press a biomarker and watch the decision change. Built on NCCN Breast Cancer v8.2026 and ESMO 2026.</p>
+
+  <div class="cards">
+    <a class="card hr" href="hr.html">
+      <span class="k">HR+/HER2−</span>
+      <p class="n">Hormone-receptor-positive, HER2-negative</p>
+      <p class="d">CDK4/6 inhibitors, PIK3CA/AKT1/PTEN and ESR1 pathways, oral SERDs, ADCs and PARP inhibitors.</p>
+      <span class="go">Open →</span>
+    </a>
+    <a class="card her2" href="her2.html">
+      <span class="k">HER2+</span>
+      <p class="n">HER2-positive</p>
+      <p class="d">First-line taxane + trastuzumab + pertuzumab, T-DXd, the tucatinib triplet for brain metastases, maintenance.</p>
+      <span class="go">Open →</span>
+    </a>
+    <a class="card tn" href="tn.html">
+      <span class="k">Triple-negative</span>
+      <p class="n">ER/PR-negative, HER2-negative</p>
+      <p class="d">PD-L1 (CPS) and immunotherapy, germline BRCA, TROP2-directed ADCs and HER2-low.</p>
+      <span class="go">Open →</span>
+    </a>
+  </div>
+
+  <h2>How it works</h2>
+  <ol class="steps">
+    <li><div><b>Start with ECOG</b><span>Performance status sets the intensity of everything that follows.</span></div></li>
+    <li><div><b>Press the patient’s markers</b><span>Biomarkers, line of therapy and safety red flags such as HbA1c, QTc, ILD and LVEF.</span></div></li>
+    <li><div><b>Read the decision</b><span>Best supportive care first, then options ranked by evidence, each with its trial’s criteria.</span></div></li>
+  </ol>
+
+  <footer>
+    <span><strong>Decision support for clinicians.</strong> Built on NCCN Breast Cancer v8.2026, the ESMO metastatic breast cancer guideline (2026) and ESMO Congress 2026 data; FDA status as of October 2026. It does not replace the multidisciplinary team or the prescribing information.</span>
+    <span>Runs entirely in your browser: nothing you enter is stored or sent.</span>
+    <span>Designed &amp; prepared by Prof. Dr. Mohammad Sabry Alkady · © 2026</span>
+  </footer>
+</div>
+</body>
+</html>
