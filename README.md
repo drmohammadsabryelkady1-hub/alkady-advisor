@@ -24,6 +24,16 @@ Patient criteria sit on the left, the treatment decision on the right; pressing 
 
 NCCN Clinical Practice Guidelines in Oncology, Breast Cancer v8.2026; ESMO metastatic breast cancer living guideline (2026) and ESMO Congress 2026 data; FDA prescribing information as of October 2026; pivotal-trial publications cited on each card.
 
+## Publishing
+
+GitHub Pages serves the site from the `gh-pages` branch (root folder). After changing a page on `main`, push the same commit to `gh-pages`:
+
+```
+git push origin main:gh-pages
+```
+
+The QR codes in the conference deck point to the four addresses above, so they keep working after every update.
+
 ## Privacy
 
 Each page is a single self-contained HTML file that runs in the browser. Nothing entered is stored or sent; the only network requests load fonts and the React library.
