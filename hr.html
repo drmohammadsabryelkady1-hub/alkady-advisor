@@ -9841,6 +9841,18 @@ function stOptsHR(e, N) {
     /* the criteria shown are those of the lead (pivotal) trial; another listed trial only when the lead has none */
     try {
       var lf = lead ? kxFit(lead, e, ph) : null;
+      if (lf && lf.has && lf.no) {
+        /* the patient fails the lead trial: switch to another trial of the same drug that she fits (MONALEESA-7 for a premenopausal woman) */
+        var d0 = String((E[o.id] && E[o.id].name) || "").split(/[\s+]/)[0].toLowerCase();
+        (o.trials || []).slice(1).some(function (k) {
+          var tk = ce[k];
+          if (!d0 || !tk || String(tk.drug || "").split(/[\s+]/)[0].toLowerCase() !== d0) return false;
+          var f2 = null;
+          try { f2 = kxFit(k, e, ph); } catch (err2) { f2 = null; }
+          if (f2 && f2.has && !f2.no) { lead = k; lf = f2; return true; }
+          return false;
+        });
+      }
       if (lf && lf.has) fit = { k: lead, f: lf };
       else { var b = kxBestTrial(o.id, e, ph, asOf); fit = b ? { k: b.k, f: b.fit } : null; }
     } catch (err) { fit = null; }
