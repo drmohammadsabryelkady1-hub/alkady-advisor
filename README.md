@@ -38,7 +38,7 @@ The QR codes in the conference deck point to the four addresses above, so they k
 ## Atlas download page
 
 `ge-atlas.html` is the page behind the download QR code of the atlas *Gastric & Esophageal Cancer Management 2026*
-(3D illustrated edition, 43 pages). It offers the PDF `ge-atlas-2026.pdf`; the `ge-atlas-*.jpg` files are its cover and page previews.
+(edition 1.3: 3D illustrated, with radiotherapy guidelines; 45 pages). It offers the PDF `ge-atlas-2026.pdf`; the `ge-atlas-*.jpg` files are its cover and page previews.
 To publish a new edition, replace `ge-atlas-2026.pdf` under the same name and push as described above: the QR code and the link stay valid.
 The PDF is locked against editing; its source is kept privately by the author.
 
