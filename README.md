@@ -11,6 +11,7 @@ Patient criteria sit on the left, the treatment decision on the right; pressing 
 | HR+/HER2− | https://drmohammadsabryelkady1-hub.github.io/alkady-advisor/hr.html |
 | HER2+ | https://drmohammadsabryelkady1-hub.github.io/alkady-advisor/her2.html |
 | Triple-negative | https://drmohammadsabryelkady1-hub.github.io/alkady-advisor/tn.html |
+| Atlas download: Gastric & Esophageal Cancer Management 2026 | https://drmohammadsabryelkady1-hub.github.io/alkady-advisor/ge-atlas.html |
 
 ## How a decision is built
 
@@ -33,6 +34,13 @@ git push origin main:gh-pages
 ```
 
 The QR codes in the conference deck point to the four addresses above, so they keep working after every update.
+
+## Atlas download page
+
+`ge-atlas.html` is the page behind the download QR code of the atlas *Gastric & Esophageal Cancer Management 2026*
+(3D illustrated edition, 43 pages). It offers the PDF `ge-atlas-2026.pdf`; the `ge-atlas-*.jpg` files are its cover and page previews.
+To publish a new edition, replace `ge-atlas-2026.pdf` under the same name and push as described above: the QR code and the link stay valid.
+The PDF is locked against editing; its source is kept privately by the author.
 
 ## Privacy
 
