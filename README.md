@@ -13,6 +13,18 @@ Patient criteria sit on the left, the treatment decision on the right; pressing 
 | Triple-negative | https://drmohammadsabryelkady1-hub.github.io/alkady-advisor/tn.html |
 | Atlas download: Gastric & Esophageal Cancer Management 2026 | https://drmohammadsabryelkady1-hub.github.io/alkady-advisor/ge-atlas.html |
 
+## Artifact editions
+
+`artifacts/` keeps a saved copy of each advisor as it stood in its claude.ai artifact on 18 Nov 2026. The three pages above are the stage editions used for the conference QR codes; these are the working editions. Open any file straight in a browser.
+
+| File | Advisor | Edition |
+|---|---|---|
+| `artifacts/hr.html` | HR+/HER2− | 17 Nov 2026 · case-first layout: patient name and age, ER · PR · HER2, biomarkers, comorbidities, 1st to 4th line, previous-treatment groups, trial cards with PFS, OS and hazard ratio · white page with the ESMO 2026 colours |
+| `artifacts/tn.html` | Triple-negative | 5 Nov 2026 · standard layout, patient-profile column beside tabbed results |
+| `artifacts/her2.html` | HER2+ | 5 Nov 2026 · standard layout, patient-profile column beside tabbed results |
+
+The files call `window.claude` only when it exists, which is inside claude.ai. Opened as plain files those optional hooks are skipped; everything else runs in the browser, with fonts and React loaded from their CDNs.
+
 ## How a decision is built
 
 1. **ECOG first.** Performance status sets the intensity: ECOG 0–1 shows the full evidence-ranked list; ECOG 2 shows de-escalated choices first; ECOG 3–4 makes best supportive care the recommendation.
