@@ -23,7 +23,7 @@ Patient criteria sit on the left, the treatment decision on the right; pressing 
 
 ## Sources
 
-NCCN Clinical Practice Guidelines in Oncology, Breast Cancer v8.2026; ESMO metastatic breast cancer living guideline (2026) and ESMO Congress 2026 data; FDA prescribing information as of October 2026; pivotal-trial publications cited on each card.
+NCCN Clinical Practice Guidelines in Oncology, Breast Cancer v9.2026 (cited 23 Oct 2026); ESMO metastatic breast cancer living guideline (2026) and ESMO Congress 2026 data; FDA prescribing information as of October 2026; pivotal-trial publications cited on each card.
 
 ## Publishing
 
