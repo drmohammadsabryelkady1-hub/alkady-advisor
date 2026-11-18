@@ -42,6 +42,24 @@ The QR codes in the conference deck point to the four addresses above, so they k
 To publish a new edition, replace `ge-atlas-2026.pdf` under the same name and push as described above: the QR code and the link stay valid.
 The PDF is locked against editing; its source is kept privately by the author.
 
+## Breast atlas download page
+
+`breast-atlas.html` is the page behind the download QR code of the atlas *Breast Cancer Management 2026* (2nd edition, ESMO 2026 update; 38 pages).
+It offers the PDF `breast-atlas-2026.pdf`; the `breast-atlas-*.jpg` files are its cover and page previews.
+To publish a new edition, replace `breast-atlas-2026.pdf` under the same name and push as described above: the QR code and the link stay valid.
+The PDF is locked against editing; its source is kept privately by the author.
+
+https://drmohammadsabryelkady1-hub.github.io/alkady-advisor/breast-atlas.html
+
+## Early breast cancer advisor: 14-day preview
+
+`ebc.html` is a preview copy of the Early Breast Cancer MDT Advisor (v3.4: patient on the left, treatment decision on the right, ESMO 2026 and ASCO 2026 updates colour-coded by source), reached by its own QR code.
+It is valid for 14 days, through Wednesday 2 December 2026 (Cairo time); afterwards the page shows "This preview has ended" and asks for a new QR code.
+The page compares the date of the web server with the date of the device (`EXPIRES` in the script at the end of the file). This is a soft gate, not copy protection: the files of a public repository can always be read.
+To end the preview for good, delete `ebc.html` from the `gh-pages` branch. To extend it, change the `EXPIRES` date and push.
+
+https://drmohammadsabryelkady1-hub.github.io/alkady-advisor/ebc.html
+
 ## Privacy
 
 Each page is a single self-contained HTML file that runs in the browser. Nothing entered is stored or sent; the only network requests load fonts and the React library.
