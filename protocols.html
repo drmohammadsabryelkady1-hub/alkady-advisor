@@ -243,6 +243,21 @@ details.more > summary { cursor: pointer; font-weight: 500; color: var(--teal); 
   table.t.stack td.why { grid-column: 2; padding-top: 0; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* version 1.1: dose per m² and total-dose spaces, subtype headings, small text buttons */
+.dose { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.15fr) 76px 136px minmax(0, 1fr); }
+.dose .calc small { display: block; color: var(--ink-3); font-size: 12.5px; }
+.dose .give .byhand { font: 600 15px/1.3 inherit; font-family: inherit; color: var(--ink-2); }
+.dose .fld.total .btn { margin-top: 4px; }
+.btn.link { min-height: 30px; padding: 2px 4px; border: 0; background: none; color: var(--teal); text-decoration: underline; font-size: 13px; justify-content: flex-start; }
+:root[data-theme="dark"] .btn.link { color: var(--navy-soft); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn.link { color: var(--navy-soft); } }
+.hint.subhead { margin: 12px 0 2px; padding-top: 8px; border-top: 1px solid var(--line-2); }
+.regs .btn.link { margin: -2px 0 6px; }
+@media (max-width: 900px) {
+  .dose { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .dose h4, .dose .calc, .dose .give { grid-column: 1 / -1; }
+}
 </style>
 </head>
 <body>
@@ -289,7 +304,7 @@ details.more > summary { cursor: pointer; font-weight: 500; color: var(--teal); 
   'use strict';
   const STP = root.STP = root.STP || {};
 
-  STP.VERSION = '1.0.0';
+  STP.VERSION = '1.1.0';
   STP.DATA_DATE = '2026-11-21';
   STP.BRAND = {
     center: 'Alkady Oncology Center',
@@ -769,6 +784,43 @@ details.more > summary { cursor: pointer; font-weight: 500; color: var(--teal); 
   oral('prednisone', 'Prednisone (or prednisolone)', 'hormone', 'Orally in the morning with food', {notes: ['Blood glucose in diabetes; gastric protection where indicated.'], x: {steroid: 1}});
   oral('dexamethasone-tx', 'Dexamethasone', 'hormone', 'Orally in the morning with food', {notes: ['Blood glucose in diabetes; gastric protection; mood and sleep.'], x: {steroid: 1}});
 })(typeof globalThis !== 'undefined' ? globalThis : window);
+/* Drugs added on 21 Nov 2026 for the wider regimen list. They are "limited" entries: the library holds only what the
+   source of the regimen states (name, route, and an infusion time where the source gives one). There are no organ-function
+   dose rules, no emetic class, no premedication and no interaction profile for them, and the page says so on every order.
+   © 2026 Prof. Dr. Mohammad Sabry Alkady — Alkady Oncology Center. */
+;(function (root) {
+  'use strict';
+  const STP = root.STP, D = STP.DRUGS;
+  const IV = 'IV infusion: dilution and rate according to the prescribing information';
+  const lim = (key, name, cls, route, admin, o) => { D[key] = Object.assign({key, name, cls, route, min: route === 'PO' ? 0 : null, emet: null, admin, rules: [], pre: [], post: [], notes: [], cool: [], x: {}, limited: true}, o || {}); };
+
+  /* oral targeted and hormonal agents */
+  lim('lorlatinib', 'Lorlatinib', 'targeted', 'PO', 'Orally once daily, continuously');
+  lim('encorafenib', 'Encorafenib', 'targeted', 'PO', 'Orally once daily');
+  lim('apalutamide', 'Apalutamide', 'hormone', 'PO', 'Orally once daily');
+  lim('sunitinib', 'Sunitinib', 'targeted', 'PO', 'Orally once daily');
+  lim('regorafenib', 'Regorafenib', 'targeted', 'PO', 'Orally once daily, 3 weeks on and 1 week off');
+  lim('everolimus', 'Everolimus', 'targeted', 'PO', 'Orally once daily');
+  lim('venetoclax', 'Venetoclax', 'targeted', 'PO', 'Orally once daily');
+  lim('zanubrutinib', 'Zanubrutinib', 'targeted', 'PO', 'Orally twice daily');
+  /* oral cytotoxics */
+  lim('lomustine', 'Lomustine', 'chemo', 'PO', 'Orally, one dose on day 1 of each 6-week cycle');
+  lim('chlorambucil', 'Chlorambucil', 'chemo', 'PO', 'Orally on the stated days');
+  /* intravenous and subcutaneous agents */
+  lim('pld', 'Pegylated liposomal doxorubicin', 'chemo', 'IV', IV);
+  lim('topotecan', 'Topotecan', 'chemo', 'IV', 'IV infusion over 30 minutes', {min: 30});
+  lim('cabazitaxel', 'Cabazitaxel', 'chemo', 'IV', 'IV infusion over 1 hour', {min: 60});
+  lim('ifosfamide', 'Ifosfamide', 'chemo', 'IV', 'IV infusion with mesna: dilution, rate and mesna dose according to the unit protocol');
+  lim('bendamustine', 'Bendamustine', 'chemo', 'IV', IV);
+  lim('azacitidine', 'Azacitidine', 'chemo', 'SC', 'Subcutaneous injection (the trial also allowed IV)', {min: 5});
+  lim('brentuximab', 'Brentuximab vedotin', 'targeted', 'IV', IV);
+  lim('polatuzumab', 'Polatuzumab vedotin', 'targeted', 'IV', IV);
+  lim('daratumumab', 'Daratumumab', 'targeted', 'IV', 'IV infusion: premedication, dilution and rate according to the prescribing information');
+  lim('obinutuzumab', 'Obinutuzumab', 'targeted', 'IV', 'IV infusion: premedication, dilution and rate according to the prescribing information');
+  lim('lanreotide', 'Lanreotide', 'hormone', 'SC', 'Deep subcutaneous injection', {min: 5});
+
+  STP.LIMITED_DRUGS = Object.keys(D).filter(k => D[k].limited);
+})(typeof globalThis !== 'undefined' ? globalThis : window);
 /* Regimen library, first release. DRAFT clinical content written from widely published standard regimens; each entry
    stays "not verified" in the app until a clinician and a pharmacist of the centre sign it off. Sites follow the NCCN
    tumour-site list. Add regimens here (see README) and rebuild.
@@ -1086,8 +1138,329 @@ details.more > summary { cursor: pointer; font-weight: 500; color: var(--teal); 
     'cml-imatinib': [CHK.m, 'Dose matched ELN 2020.'], 'cml-dasatinib': [CHK.m, 'Dose matched ELN 2020.'],
     'cml-nilotinib': [CHK.p, 'Dose matched ELN 2020; the fasting rule was not checked against the label.']
   };
-  STP.checkOf = id => { const c = (STP.CHECKS || {})[id]; return c ? {status: c[0], text: c[1]} : {status: 'none', text: 'Not yet compared with a primary source.'}; };
-  STP.regimenById = id => L.find(r => r.id === id) || null;
+  STP._R = {X, P, reg, d, TRAS, PERT, PEMBRO, AC, PAC175, FU46, FOLFOX, BEV, CAPE, GOS, ADT};
+  STP.checkOf = id => { const own = (STP.regimenById(id) || {}).check, c = own ? [own.status, own.text] : (STP.CHECKS || {})[id]; return c ? {status: c[0], text: c[1]} : {status: 'none', text: 'Not yet compared with a primary source.'}; };
+  STP.regimenById = id => L.find(r => r.id === id) || (STP.IMPORTED || []).find(r => r.id === id) || null;
+})(typeof globalThis !== 'undefined' ? globalThis : window);
+/* Regimens added on 21 Nov 2026 so that every tumor subtype offers more than one option.
+   Every dose here comes from a source opened that day (named in `refs` and listed in sources/2026-11-21-sources.md),
+   or is a copy of items already in the library (taken with items() from the older regimen, so the numbers cannot drift).
+   A registered trial protocol is not a guideline and not a drug label: each regimen is DRAFT until the centre checks it.
+   © 2026 Prof. Dr. Mohammad Sabry Alkady — Alkady Oncology Center. */
+;(function (root) {
+  'use strict';
+  const STP = root.STP, R = STP._R, X = R.X, P = R.P, reg = R.reg, d = R.d, PEMBRO = R.PEMBRO, TRAS = R.TRAS, PAC175 = R.PAC175, FOLFOX = R.FOLFOX, BEV = R.BEV, CAPE = R.CAPE, ADT = R.ADT;
+  const OPENED = 'opened 21 Nov 2026';
+  const CT = (id, name) => ({org: 'ClinicalTrials.gov', title: id + ' (' + name + '): registered trial protocol, ' + OPENED, url: 'https://clinicaltrials.gov/study/' + id});
+  const PM = (doi, name) => ({org: 'PubMed', title: name + ': published abstract, ' + OPENED, url: 'https://doi.org/' + doi});
+  const BCC = code => ({org: 'BC Cancer', title: 'Protocol ' + code + ', ' + OPENED, url: 'https://www.bccancer.bc.ca/health-professionals/clinical-resources/chemotherapy-protocols'});
+  const LIB = id => ({org: 'This library', title: 'Doses copied from the regimen "' + STP.regimenById(id).name + '" (' + id + ')', url: ''});
+  /* copies from older regimens */
+  const phaseOf = (id, pi) => STP.regimenById(id).phases[pi || 0];
+  const items = (id, pi) => phaseOf(id, pi).items.map(it => Object.assign({}, it));
+  const without = (arr, drug) => arr.filter(it => it.drug !== drug);
+  const one = (id, drug, o) => Object.assign({}, phaseOf(id).items.find(it => it.drug === drug), o || {});
+  const daily = (drug, dose, days, o) => X(drug, dose, 'mg', days, Object.assign({freq: 'once daily'}, o || {}));
+  const FU_DAYS = (dose, last) => X('fluorouracil-civi', dose, 'mg/m2', d(1, last), {hours: 24 * last, perDay: true, label: 'Fluorouracil continuous infusion (dose per day, days 1–' + last + ')'});
+  const LABEL_PDL1 = 'Check the PD-L1 requirement of the current label before prescribing.';
+  const CYCLES = 'number of cycles according to the protocol your unit follows (not stated in the source opened)';
+
+  /* ---------- new tumor sites ---------- */
+  const ALL = 'https://www.cancer.gov/publications/pdq/information-summaries/adult-treatment';
+  STP.GROUPS.push('Endocrine and neuroendocrine');
+  Object.assign(STP.SITES, {
+    anal: {name: 'Anal carcinoma (advanced)', group: 'Gastrointestinal', nccn: 'Anal Carcinoma', pdq: ALL},
+    thyroid: {name: 'Thyroid cancer', group: 'Endocrine and neuroendocrine', nccn: 'Thyroid Carcinoma', pdq: ALL},
+    net: {name: 'Neuroendocrine tumors', group: 'Endocrine and neuroendocrine', nccn: 'Neuroendocrine and Adrenal Tumors', pdq: ALL},
+    cll: {name: 'Chronic lymphocytic leukemia', group: 'Hematologic', nccn: 'Chronic Lymphocytic Leukemia/Small Lymphocytic Lymphoma', pdq: ALL},
+    mds: {name: 'Myelodysplastic syndromes', group: 'Hematologic', nccn: 'Myelodysplastic Syndromes', pdq: ALL}
+  });
+  Object.assign(STP.SITES.sarcoma, {name: 'Soft tissue sarcoma and GIST', nccn: 'Soft Tissue Sarcoma; Gastrointestinal Stromal Tumors'});
+  STP.SITES.dlbcl.name = 'B-cell lymphomas';
+
+  /* =============================== THORACIC =============================== */
+  reg({id: 'nsclc-osi-chemo', site: 'nsclc', sub: 'EGFR exon 19 deletion or L858R, advanced', stage: 'late', intent: 'First line', name: 'Osimertinib + pemetrexed + platinum', cls: ['targeted', 'chemo'], biomarker: 'EGFR exon 19 deletion or L858R', escalated: true,
+    phases: [P('Osimertinib + pemetrexed + platinum', 21, 4, [daily('osimertinib', 80, d(1, 21)), X('pemetrexed', 500, 'mg/m2', [1]), X('carboplatin', 5, 'AUC', [1], {levels: [5, 4], alt: 'or cisplatin 75 mg/m² on day 1'})], {emet: 'high'}),
+      P('Osimertinib + pemetrexed maintenance', 21, 0, [daily('osimertinib', 80, d(1, 21)), X('pemetrexed', 500, 'mg/m2', [1])], {until: 'until progression'})],
+    down: 'nsclc-osimertinib', refs: [CT('NCT04035486', 'FLAURA2')]});
+  reg({id: 'nsclc-lorlatinib', site: 'nsclc', sub: 'ALK-rearranged, advanced', stage: 'late', intent: 'First line', name: 'Lorlatinib', cls: ['targeted'], biomarker: 'ALK rearrangement',
+    phases: [P('Lorlatinib', 28, 0, [daily('lorlatinib', 100, d(1, 28))], {heme: null, until: 'until progression'})], refs: [CT('NCT03052608', 'CROWN')]});
+  reg({id: 'nsclc-carbo-pac-rt', site: 'nsclc', sub: 'Locally advanced, unresectable (stage III), any histology', stage: 'early', intent: 'With thoracic radiotherapy', name: 'Weekly paclitaxel + carboplatin with radiotherapy', cls: ['chemo'],
+    phases: [P('Weekly paclitaxel + carboplatin', 7, 6, [X('paclitaxel', 45, 'mg/m2', [1], {min: 60, min1: 60}), X('carboplatin', 2, 'AUC', [1], {min: 30})],
+      {heme: {anc: 1.0, plt: 100}, gcsf: 'no', note: 'Weekly for 6 weeks from day 1 of radiotherapy. BC Cancer LULACATRT was read as treating with ANC 1.0 or more and platelets 50 or more, otherwise a 1-week delay: this page keeps platelets 100 until the centre confirms the lower figure in the protocol. Premedication in that protocol: dexamethasone 10 mg IV 45 minutes before; diphenhydramine 25 mg IV and famotidine 20 mg IV 30 minutes before paclitaxel.'})],
+    refs: [BCC('LULACATRT (revised 1 Aug 2025)')]});
+  reg({id: 'sclc-durva-consolidation', site: 'sclc', sub: 'Limited stage, no progression after chemoradiation', stage: 'early', intent: 'Consolidation after chemoradiation', name: 'Durvalumab consolidation', cls: ['immuno'],
+    phases: [P('Durvalumab', 28, 0, [X('durvalumab', 1500, 'mg', [1])], {until: 'duration according to the label'})], refs: [CT('NCT03703297', 'ADRIATIC')]});
+  reg({id: 'sclc-carbo-etop', site: 'sclc', sub: 'Extensive stage', stage: 'late', intent: 'First line, when immunotherapy is not available or not suitable', name: 'Carboplatin + etoposide', cls: ['chemo'],
+    phases: [P('Carboplatin + etoposide', 21, 4, [X('carboplatin', 5, 'AUC', [1], {levels: [5, 4], alt: 'or cisplatin 75 mg/m² on day 1'}), X('etoposide', 100, 'mg/m2', [1, 2, 3], {levels: [100, 75]})], {emet: 'high', gcsf: 'consider', note: 'Four cycles as in the atezolizumab regimen of this library; the record opened does not state the number.'})],
+    up: 'sclc-carbo-etop-atezo', refs: [CT('NCT03066778', 'KEYNOTE-604, chemotherapy arm')]});
+
+  /* =============================== GASTROINTESTINAL =============================== */
+  const CETUX = () => X('cetuximab', 500, 'mg/m2', [1], {min: 120, min1: 120});
+  reg({id: 'crc-folfiri-cetuximab', site: 'colorectal', sub: 'RAS and BRAF wild-type, left-sided', stage: 'late', intent: 'Metastatic, first line', name: 'FOLFIRI + cetuximab', cls: ['chemo', 'targeted'], biomarker: 'KRAS, NRAS and BRAF wild-type',
+    phases: [P('FOLFIRI + cetuximab', 14, 0, [CETUX()].concat(without(items('crc-folfiri'), 'bevacizumab')), {heme: phaseOf('crc-folfiri').heme, until: 'until progression'})],
+    refs: [LIB('crc-folfiri'), LIB('crc-folfox-cetuximab'), CT('NCT04607421', 'BREAKWATER, lead-in cohort: the same irinotecan, leucovorin, fluorouracil and cetuximab doses')]});
+  reg({id: 'crc-enco-cetux', site: 'colorectal', sub: 'BRAF V600E-mutated, metastatic', stage: 'late', intent: 'Metastatic (line of therapy according to the label)', name: 'Encorafenib + cetuximab', cls: ['targeted'], biomarker: 'BRAF V600E',
+    phases: [P('Encorafenib + cetuximab', 14, 0, [daily('encorafenib', 300, d(1, 14)), CETUX()], {heme: null, until: 'until progression'})], up: 'crc-enco-cetux-folfox', refs: [CT('NCT04607421', 'BREAKWATER')]});
+  reg({id: 'crc-enco-cetux-folfox', site: 'colorectal', sub: 'BRAF V600E-mutated, metastatic', stage: 'late', intent: 'Metastatic, first line', name: 'Encorafenib + cetuximab + mFOLFOX6', cls: ['targeted', 'chemo'], biomarker: 'BRAF V600E', escalated: true,
+    phases: [P('Encorafenib + cetuximab + mFOLFOX6', 14, 0, [daily('encorafenib', 300, d(1, 14)), CETUX()].concat(FOLFOX.map(it => Object.assign({}, it))), {heme: phaseOf('crc-folfox').heme, until: 'until progression'})],
+    down: 'crc-enco-cetux', refs: [CT('NCT04607421', 'BREAKWATER')]});
+  reg({id: 'crc-nivo-ipi', site: 'colorectal', sub: 'MSI-high or mismatch repair-deficient, metastatic', stage: 'late', intent: 'Metastatic', name: 'Nivolumab + ipilimumab', cls: ['immuno'], biomarker: 'MSI-H or dMMR', escalated: true,
+    phases: [P('Nivolumab + ipilimumab', 21, 4, [X('nivolumab', 240, 'mg', [1]), X('ipilimumab', 1, 'mg/kg', [1])]),
+      P('Nivolumab maintenance', 28, 0, [X('nivolumab', 480, 'mg', [1])], {until: 'duration according to the label'})],
+    down: 'crc-nivolumab', refs: [PM('10.1016/S0140-6736(24)02848-4', 'CheckMate 8HW')]});
+  reg({id: 'crc-nivolumab', site: 'colorectal', sub: 'MSI-high or mismatch repair-deficient, metastatic', stage: 'late', intent: 'Metastatic', name: 'Nivolumab', cls: ['immuno'], biomarker: 'MSI-H or dMMR',
+    phases: [P('Nivolumab every 2 weeks', 14, 6, [X('nivolumab', 240, 'mg', [1])]), P('Nivolumab every 4 weeks', 28, 0, [X('nivolumab', 480, 'mg', [1])], {until: 'duration according to the label'})],
+    up: 'crc-nivo-ipi', refs: [PM('10.1016/S0140-6736(24)02848-4', 'CheckMate 8HW, nivolumab arm')]});
+  reg({id: 'eso-pembro-cf', site: 'gastric', sub: 'Esophageal or junctional carcinoma, advanced', stage: 'late', intent: 'First line', name: 'Pembrolizumab + cisplatin + fluorouracil', cls: ['chemo', 'immuno'],
+    phases: [P('Pembrolizumab + cisplatin + fluorouracil', 21, 6, [PEMBRO(), X('cisplatin', 80, 'mg/m2', [1]), FU_DAYS(800, 5)], {note: 'Cisplatin for at most 6 doses. ' + LABEL_PDL1}),
+      P('Pembrolizumab + fluorouracil', 21, 0, [PEMBRO(), FU_DAYS(800, 5)], {until: 'pembrolizumab up to 35 cycles in all'})],
+    refs: [CT('NCT03189719', 'KEYNOTE-590')]});
+  reg({id: 'gastric-pembro-tras-capox', site: 'gastric', sub: 'HER2-positive gastric or junctional adenocarcinoma, advanced', stage: 'late', intent: 'First line', name: 'Pembrolizumab + trastuzumab + CAPOX', cls: ['chemo', 'targeted', 'immuno'], biomarker: 'HER2-positive',
+    phases: [P('Pembrolizumab + trastuzumab + CAPOX', 21, 0, [PEMBRO(), TRAS(), X('oxaliplatin', 130, 'mg/m2', [1], {min: 120, levels: [130, 100, 85]}), CAPE(1000, d(1, 14))], {heme: phaseOf('crc-capox').heme, until: 'until progression', note: LABEL_PDL1})],
+    refs: [CT('NCT03615326', 'KEYNOTE-811')]});
+  reg({id: 'gastric-pembro-tras-fp', site: 'gastric', sub: 'HER2-positive gastric or junctional adenocarcinoma, advanced', stage: 'late', intent: 'First line', name: 'Pembrolizumab + trastuzumab + cisplatin + fluorouracil', cls: ['chemo', 'targeted', 'immuno'], biomarker: 'HER2-positive',
+    phases: [P('Pembrolizumab + trastuzumab + cisplatin + fluorouracil', 21, 0, [PEMBRO(), TRAS(), X('cisplatin', 80, 'mg/m2', [1]), FU_DAYS(800, 5)], {until: 'until progression', note: LABEL_PDL1})],
+    refs: [CT('NCT03615326', 'KEYNOTE-811')]});
+  const GEMCIS = () => without(items('biliary-gemcis-durva'), 'durvalumab');
+  reg({id: 'biliary-gemcis', site: 'biliary', sub: 'Cholangiocarcinoma or gallbladder cancer', stage: 'late', intent: 'Advanced, first line, when immunotherapy is not available or not suitable', name: 'Gemcitabine + cisplatin', cls: ['chemo'],
+    phases: [P('Gemcitabine + cisplatin', 21, 8, GEMCIS(), {emet: 'mod', dayHeme: phaseOf('biliary-gemcis-durva').dayHeme, note: 'Control arm of KEYNOTE-966: cisplatin for at most 8 cycles; gemcitabine has no fixed maximum.'})],
+    up: 'biliary-gemcis-pembro', refs: [PM('10.1016/S0140-6736(23)00727-4', 'KEYNOTE-966, control arm'), LIB('biliary-gemcis-durva')]});
+  reg({id: 'biliary-gemcis-pembro', site: 'biliary', sub: 'Cholangiocarcinoma or gallbladder cancer', stage: 'late', intent: 'Advanced, first line', name: 'Gemcitabine + cisplatin + pembrolizumab', cls: ['chemo', 'immuno'],
+    phases: [P('Gemcitabine + cisplatin + pembrolizumab', 21, 8, [PEMBRO()].concat(GEMCIS()), {emet: 'mod', dayHeme: phaseOf('biliary-gemcis-durva').dayHeme}),
+      P('Pembrolizumab + gemcitabine', 21, 0, [PEMBRO()].concat(without(GEMCIS(), 'cisplatin')), {dayHeme: phaseOf('biliary-gemcis-durva').dayHeme, until: 'pembrolizumab up to 35 cycles in all; gemcitabine has no fixed maximum'})],
+    down: 'biliary-gemcis', refs: [PM('10.1016/S0140-6736(23)00727-4', 'KEYNOTE-966')]});
+  reg({id: 'anal-carbo-pac', site: 'anal', sub: 'Squamous cell carcinoma, inoperable recurrent or metastatic', stage: 'late', intent: 'First line', name: 'Carboplatin + weekly paclitaxel', cls: ['chemo'],
+    phases: [P('Carboplatin + weekly paclitaxel', 28, 0, [X('paclitaxel', 80, 'mg/m2', [1, 8, 15], {min: 60, min1: 60}), X('carboplatin', 5, 'AUC', [1], {min: 60})], {emet: 'high', until: CYCLES})], refs: [CT('NCT02051868', 'InterAACT')]});
+  reg({id: 'anal-cis-fu', site: 'anal', sub: 'Squamous cell carcinoma, inoperable recurrent or metastatic', stage: 'late', intent: 'First line', name: 'Cisplatin + fluorouracil', cls: ['chemo'],
+    phases: [P('Cisplatin + fluorouracil', 21, 0, [X('cisplatin', 60, 'mg/m2', [1], {min: 60}), FU_DAYS(1000, 4)], {until: CYCLES})], refs: [CT('NCT02051868', 'InterAACT')]});
+
+  /* =============================== GYNECOLOGIC =============================== */
+  /* weekly paclitaxel 80 mg/m² with its dose levels: phase 2 of AC → T in this library */
+  const PAC80 = (days) => Object.assign({}, STP.regimenById('breast-ac-t').phases[1].items[0], {days, min: 60, min1: 60});
+  reg({id: 'ovary-carbo-pld', site: 'ovary', sub: 'Platinum-sensitive relapse', stage: 'late', intent: 'Relapse after a platinum-free interval', name: 'Carboplatin + pegylated liposomal doxorubicin', cls: ['chemo'],
+    phases: [P('Carboplatin + PLD', 28, 6, [X('pld', 30, 'mg/m2', [1]), X('carboplatin', 5, 'AUC', [1], {levels: [5, 4]})], {emet: 'high'})], refs: [CT('NCT00189553', 'CALYPSO')]});
+  reg({id: 'ovary-pac-weekly-bev', site: 'ovary', sub: 'Platinum-resistant relapse', stage: 'late', intent: 'Relapse within 6 months of platinum', name: 'Weekly paclitaxel ± bevacizumab', cls: ['chemo', 'targeted'],
+    phases: [P('Weekly paclitaxel ± bevacizumab', 28, 0, [PAC80([1, 8, 15, 22]), BEV(10, [1, 15], true)], {heme: STP.regimenById('breast-ac-t').phases[1].heme, until: 'until progression', note: 'Bevacizumab 15 mg/kg every 3 weeks is the other schedule in the record.'})],
+    refs: [CT('NCT00976911', 'AURELIA')]});
+  reg({id: 'ovary-pld-bev', site: 'ovary', sub: 'Platinum-resistant relapse', stage: 'late', intent: 'Relapse within 6 months of platinum', name: 'Pegylated liposomal doxorubicin ± bevacizumab', cls: ['chemo', 'targeted'],
+    phases: [P('PLD ± bevacizumab', 28, 0, [X('pld', 40, 'mg/m2', [1]), BEV(10, [1, 15], true)], {until: 'until progression'})], refs: [CT('NCT00976911', 'AURELIA')]});
+  reg({id: 'ovary-topotecan-bev', site: 'ovary', sub: 'Platinum-resistant relapse', stage: 'late', intent: 'Relapse within 6 months of platinum', name: 'Weekly topotecan ± bevacizumab', cls: ['chemo', 'targeted'],
+    phases: [P('Weekly topotecan ± bevacizumab', 28, 0, [X('topotecan', 4, 'mg/m2', [1, 8, 15]), BEV(10, [1, 15], true)], {until: 'until progression', note: 'The record also allows a 5-day schedule every 3 weeks; it writes that dose with two different units, so take it from the label.'})],
+    refs: [CT('NCT00976911', 'AURELIA')]});
+  reg({id: 'endo-pembro-lenva', site: 'uterine', sub: 'Advanced endometrial carcinoma after platinum', stage: 'late', intent: 'After platinum-based therapy', name: 'Pembrolizumab + lenvatinib', cls: ['immuno', 'targeted'],
+    phases: [P('Pembrolizumab + lenvatinib', 21, 35, [PEMBRO(), daily('lenvatinib', 20, d(1, 21))], {heme: null, until: 'pembrolizumab up to 35 cycles; lenvatinib until progression', note: 'Check the mismatch-repair requirement of the label in your country.'})],
+    refs: [CT('NCT03517449', 'KEYNOTE-775')]});
+  reg({id: 'endo-carbo-pac', site: 'uterine', sub: 'Advanced or recurrent endometrial carcinoma', stage: 'late', intent: 'First line, when immunotherapy is not available or not suitable', name: 'Carboplatin + paclitaxel', cls: ['chemo'],
+    phases: [P('Carboplatin + paclitaxel', 21, 6, without(items('endo-carbo-pac-pembro'), 'pembrolizumab'), {emet: 'high', gcsf: 'consider'})], up: 'endo-carbo-pac-pembro', refs: [LIB('endo-carbo-pac-pembro')]});
+  const CIS40 = () => one('cervix-cis-rt', 'cisplatin', {days: [1, 8, 15]});
+  reg({id: 'cervix-pembro-crt', site: 'cervix', sub: 'High-risk locally advanced cervical cancer', stage: 'early', intent: 'With chemoradiation', name: 'Pembrolizumab with cisplatin chemoradiation', cls: ['chemo', 'immuno'], escalated: true,
+    phases: [P('During chemoradiation (pembrolizumab cycles 1–2, weekly cisplatin)', 21, 2, [PEMBRO({alt: null}), CIS40()], {heme: phaseOf('cervix-cis-rt').heme, gcsf: 'no', note: 'Weekly cisplatin for 5 or 6 doses in all during radiotherapy: 6 are scheduled here, and the consultant omits the last one when 5 are planned.'}),
+      P('Pembrolizumab every 3 weeks (cycles 3–5)', 21, 3, [PEMBRO({alt: null})]),
+      P('Pembrolizumab every 6 weeks', 42, 15, [X('pembrolizumab', 400, 'mg', [1])], {until: '15 six-weekly cycles'})],
+    down: 'cervix-cis-rt', refs: [CT('NCT04221945', 'KEYNOTE-A18'), LIB('cervix-cis-rt')]});
+  reg({id: 'cervix-pembro-pac-cis', site: 'cervix', sub: 'Persistent, recurrent or metastatic cervical cancer', stage: 'late', intent: 'First line', name: 'Pembrolizumab + paclitaxel + cisplatin ± bevacizumab', cls: ['chemo', 'immuno', 'targeted'],
+    phases: [P('Pembrolizumab + paclitaxel + cisplatin ± bevacizumab', 21, 6, [PEMBRO(), PAC175(), X('cisplatin', 50, 'mg/m2', [1]), BEV(15, [1], false)], {note: 'Chemotherapy for up to 6 cycles. ' + LABEL_PDL1}),
+      P('Pembrolizumab ± bevacizumab', 21, 0, [PEMBRO(), BEV(15, [1], false)], {until: 'pembrolizumab up to 35 cycles in all'})],
+    refs: [CT('NCT03635567', 'KEYNOTE-826')]});
+  reg({id: 'cervix-pembro-pac-carbo', site: 'cervix', sub: 'Persistent, recurrent or metastatic cervical cancer', stage: 'late', intent: 'First line', name: 'Pembrolizumab + paclitaxel + carboplatin ± bevacizumab', cls: ['chemo', 'immuno', 'targeted'],
+    phases: [P('Pembrolizumab + paclitaxel + carboplatin ± bevacizumab', 21, 6, [PEMBRO(), PAC175(), X('carboplatin', 5, 'AUC', [1], {levels: [5, 4]}), BEV(15, [1], false)], {emet: 'high', note: 'Chemotherapy for up to 6 cycles. ' + LABEL_PDL1}),
+      P('Pembrolizumab ± bevacizumab', 21, 0, [PEMBRO(), BEV(15, [1], false)], {until: 'pembrolizumab up to 35 cycles in all'})],
+    refs: [CT('NCT03635567', 'KEYNOTE-826')]});
+
+  /* =============================== HEAD AND NECK =============================== */
+  reg({id: 'npc-gp-induction', site: 'hn', sub: 'Nasopharyngeal carcinoma, locoregionally advanced', stage: 'early', intent: 'Induction before chemoradiation', name: 'Gemcitabine + cisplatin induction', cls: ['chemo'],
+    phases: [P('Gemcitabine + cisplatin', 21, 3, [X('gemcitabine', 1000, 'mg/m2', [1, 8]), X('cisplatin', 80, 'mg/m2', [1])], {note: 'Followed by radiotherapy with cisplatin 100 mg/m² every 3 weeks for 3 cycles: use the regimen "Cisplatin with radiotherapy".'})],
+    refs: [CT('NCT01872962', 'Induction gemcitabine and cisplatin in nasopharyngeal carcinoma')]});
+
+  /* =============================== GENITOURINARY =============================== */
+  reg({id: 'prostate-cabazitaxel', site: 'prostate', sub: 'Metastatic castration-resistant, after docetaxel', stage: 'late', intent: 'With androgen deprivation', name: 'Cabazitaxel + prednisone', cls: ['chemo', 'hormone'],
+    phases: [P('Cabazitaxel', 21, 0, [X('cabazitaxel', 25, 'mg/m2', [1]), daily('prednisone', 10, d(1, 21)), ADT], {gcsf: 'consider', until: 'until progression or the maximum number of cycles in the protocol your unit follows'})],
+    refs: [CT('NCT00417079', 'TROPIC')]});
+  reg({id: 'prostate-apalutamide', site: 'prostate', sub: 'Metastatic hormone-sensitive', stage: 'late', intent: 'With androgen deprivation', name: 'Apalutamide', cls: ['hormone'],
+    phases: [P('Apalutamide', 28, 0, [daily('apalutamide', 240, d(1, 28)), ADT], {heme: null, until: 'until progression'})], refs: [CT('NCT02489318', 'TITAN')]});
+  reg({id: 'prostate-olaparib', site: 'prostate', sub: 'Metastatic castration-resistant with a homologous recombination repair gene alteration', stage: 'late', intent: 'After a novel hormonal agent', name: 'Olaparib', cls: ['targeted'], biomarker: 'Homologous recombination repair gene alteration (gene list: see the label)',
+    phases: [P('Olaparib', 28, 0, [one('breast-olaparib', 'olaparib'), ADT], {heme: null, until: 'until progression'})], refs: [CT('NCT02987543', 'PROfound')]});
+  reg({id: 'rcc-lenva-pembro', site: 'kidney', sub: 'Clear cell, advanced', stage: 'late', intent: 'First line', name: 'Lenvatinib + pembrolizumab', cls: ['targeted', 'immuno'],
+    phases: [P('Lenvatinib + pembrolizumab', 21, 0, [PEMBRO(), daily('lenvatinib', 20, d(1, 21))], {heme: null, until: 'until progression (see the label for the maximum duration of pembrolizumab)'})], refs: [CT('NCT02811861', 'CLEAR')]});
+  reg({id: 'rcc-sunitinib', site: 'kidney', sub: 'Clear cell, advanced', stage: 'late', intent: 'First line, when immunotherapy is not suitable', name: 'Sunitinib', cls: ['targeted'],
+    phases: [P('Sunitinib, 4 weeks on and 2 weeks off', 42, 0, [daily('sunitinib', 50, d(1, 28))], {heme: null, until: 'until progression'})],
+    refs: [CT('NCT02811861', 'CLEAR, sunitinib arm'), CT('NCT02231749', 'CheckMate 214, sunitinib arm')]});
+  reg({id: 'testis-ep', site: 'testis', sub: 'Germ cell tumor, when bleomycin is not suitable', stage: 'both', intent: 'Curative', name: 'EP (etoposide, cisplatin)', cls: ['chemo'],
+    phases: [P('EP', 21, 0, without(items('testis-bep'), 'bleomycin'), {emet: 'high', gcsf: 'consider', heme: null, until: CYCLES, note: phaseOf('testis-bep').note})],
+    refs: [LIB('testis-bep')]});
+
+  /* =============================== CENTRAL NERVOUS SYSTEM =============================== */
+  reg({id: 'gbm-lomustine', site: 'cns', sub: 'Glioblastoma, first progression', stage: 'late', intent: 'At recurrence', name: 'Lomustine', cls: ['chemo'],
+    phases: [P('Lomustine', 42, 0, [X('lomustine', 110, 'mg/m2', [1], {max: 200})], {until: 'until progression'})], refs: [CT('NCT01290939', 'EORTC 26101')]});
+  reg({id: 'gbm-lomustine-bev', site: 'cns', sub: 'Glioblastoma, first progression', stage: 'late', intent: 'At recurrence', name: 'Lomustine + bevacizumab', cls: ['chemo', 'targeted'],
+    phases: [P('Lomustine + bevacizumab', 42, 0, [X('lomustine', 90, 'mg/m2', [1], {max: 160, alt: '110 mg/m² (maximum 200 mg) from cycle 2 if cycle 1 gave no haematological toxicity above grade 1'}), X('bevacizumab', 10, 'mg/kg', [1, 15, 29])], {until: 'until progression'})],
+    refs: [CT('NCT01290939', 'EORTC 26101')]});
+
+  /* =============================== SARCOMA =============================== */
+  reg({id: 'sarcoma-dox-ifos', site: 'sarcoma', sub: 'Advanced soft tissue sarcoma, fit, when tumour shrinkage is the aim', stage: 'late', intent: 'First line', name: 'Doxorubicin + ifosfamide', cls: ['chemo'], escalated: true,
+    phases: [P('Doxorubicin + ifosfamide', 21, 6, [X('doxorubicin', 25, 'mg/m2', [1, 2, 3]), X('ifosfamide', 2500, 'mg/m2', [1, 2, 3, 4], {label: 'Ifosfamide (10 g/m² in all over days 1–4) with mesna'})],
+      {gcsf: 'primary', note: 'The abstract gives ifosfamide as 10 g/m² over 4 days: 2,500 mg/m² per day is an equal split, and the infusion time is not stated. Mesna and pegfilgrastim were given to every patient in the trial: take their doses from the unit protocol. Cumulative doxorubicin after 6 cycles: 450 mg/m².'})],
+    down: 'sarcoma-doxorubicin', refs: [PM('10.1016/S1470-2045(14)70063-4', 'EORTC 62012')]});
+  reg({id: 'gist-imatinib', site: 'sarcoma', sub: 'Gastrointestinal stromal tumor', stage: 'both', intent: 'Adjuvant (1 or 3 years in the trial) or advanced', name: 'Imatinib', cls: ['targeted'],
+    phases: [P('Imatinib', 28, 0, [one('cml-imatinib', 'imatinib')], {heme: null, until: 'adjuvant: 1 or 3 years in the trial; advanced: until progression'})], refs: [CT('NCT00116935', 'SSG XVIII, adjuvant imatinib')]});
+  reg({id: 'gist-sunitinib', site: 'sarcoma', sub: 'Gastrointestinal stromal tumor, after imatinib', stage: 'late', intent: 'Second line', name: 'Sunitinib', cls: ['targeted'],
+    phases: [P('Sunitinib, 4 weeks on and 2 weeks off', 42, 0, [daily('sunitinib', 50, d(1, 28))], {heme: null, until: 'until progression'})], refs: [CT('NCT00075218', 'Sunitinib in GIST')]});
+  reg({id: 'gist-regorafenib', site: 'sarcoma', sub: 'Gastrointestinal stromal tumor, after imatinib and sunitinib', stage: 'late', intent: 'Third line', name: 'Regorafenib', cls: ['targeted'],
+    phases: [P('Regorafenib, 3 weeks on and 1 week off', 28, 0, [daily('regorafenib', 160, d(1, 21))], {heme: null, until: 'until progression'})], refs: [CT('NCT01271712', 'GRID')]});
+
+  /* =============================== HEMATOLOGIC =============================== */
+  const RCHOP = phaseOf('dlbcl-rchop');
+  reg({id: 'dlbcl-pola-r-chp', site: 'dlbcl', sub: 'Diffuse large B-cell lymphoma', stage: 'both', intent: 'First line', name: 'Pola-R-CHP', cls: ['chemo', 'targeted'], escalated: true,
+    phases: [P('Pola-R-CHP', 21, 6, without(items('dlbcl-rchop'), 'vincristine').concat([X('polatuzumab', 1.8, 'mg/kg', [1])]), {emet: RCHOP.emet, gcsf: RCHOP.gcsf, heme: RCHOP.heme}),
+      P('Rituximab alone (cycles 7 and 8)', 21, 2, [X('rituximab', 375, 'mg/m2', [1])])],
+    down: 'dlbcl-rchop', refs: [CT('NCT03274492', 'POLARIX')]});
+  reg({id: 'fl-br', site: 'dlbcl', sub: 'Follicular and other indolent B-cell lymphomas', stage: 'both', intent: 'First line', name: 'Bendamustine + rituximab (BR)', cls: ['chemo', 'targeted'],
+    phases: [P('Bendamustine + rituximab', 28, 0, [X('rituximab', 375, 'mg/m2', [1]), X('bendamustine', 90, 'mg/m2', [1, 2])], {until: CYCLES})], refs: [CT('NCT00991211', 'StiL NHL1')]});
+  reg({id: 'hl-a-avd', site: 'hodgkin', sub: 'Classic Hodgkin lymphoma, advanced stage', stage: 'late', intent: 'First line', name: 'Brentuximab vedotin + AVD', cls: ['chemo', 'targeted'], escalated: true,
+    phases: [P('A + AVD', 28, 0, [X('brentuximab', 1.2, 'mg/kg', [1, 15])].concat(without(items('hl-abvd'), 'bleomycin')), {emet: 'high', until: CYCLES, note: 'Growth-factor support: follow the label of brentuximab vedotin.'})],
+    down: 'hl-abvd', refs: [CT('NCT01712490', 'ECHELON-1')]});
+  const AZA = () => X('azacitidine', 75, 'mg/m2', d(1, 7));
+  const TLS = 'Tumour lysis risk assessment, prophylaxis and monitoring, and the venetoclax dose with azole antifungals, follow the label: they are not in this library.';
+  reg({id: 'aml-aza-ven', site: 'aml', sub: 'Acute myeloid leukemia, not fit for intensive therapy', stage: 'both', intent: 'First line', name: 'Azacitidine + venetoclax', cls: ['chemo', 'targeted'],
+    phases: [P('Cycle 1 (venetoclax ramp-up)', 28, 1, [AZA(), daily('venetoclax', 100, [1], {label: 'Venetoclax, day 1'}), daily('venetoclax', 200, [2], {label: 'Venetoclax, day 2'}), daily('venetoclax', 400, d(3, 28), {label: 'Venetoclax, day 3 onwards'})], {heme: null, gcsf: 'no', note: TLS}),
+      P('Cycle 2 onwards', 28, 0, [AZA(), daily('venetoclax', 400, d(1, 28))], {heme: null, gcsf: 'no', until: 'until progression', note: TLS})],
+    down: 'aml-azacitidine', refs: [CT('NCT02993523', 'VIALE-A')]});
+  reg({id: 'aml-azacitidine', site: 'aml', sub: 'Acute myeloid leukemia, not fit for intensive therapy', stage: 'both', intent: 'First line', name: 'Azacitidine', cls: ['chemo'], reduced: true,
+    phases: [P('Azacitidine', 28, 0, [AZA()], {heme: null, gcsf: 'no', until: 'until progression'})], up: 'aml-aza-ven', refs: [CT('NCT02993523', 'VIALE-A, control arm')]});
+  reg({id: 'mds-azacitidine', site: 'mds', sub: 'Higher-risk myelodysplastic syndrome', stage: 'both', intent: 'First line', name: 'Azacitidine', cls: ['chemo'],
+    phases: [P('Azacitidine', 28, 0, [AZA()], {heme: null, gcsf: 'no', until: 'until progression'})], refs: [CT('NCT00071799', 'AZA-001')]});
+  reg({id: 'mds-lenalidomide', site: 'mds', sub: 'Myelodysplastic syndrome with del(5q), transfusion-dependent', stage: 'both', intent: 'First line', name: 'Lenalidomide', cls: ['targeted'], biomarker: 'del(5q)',
+    phases: [P('Lenalidomide', 28, 0, [daily('lenalidomide', 10, d(1, 21), {alt: 'or 5 mg daily without a break (the other arm of the trial)'})], {heme: null, until: 'until progression'})], refs: [CT('NCT00179621', 'MDS-004')]});
+  const LEN25 = () => one('mm-vrd-weekly', 'lenalidomide', {days: d(1, 21)});
+  const DEX40 = () => daily('dexamethasone-tx', 40, [1, 8, 15, 22]);
+  const DARA = days => X('daratumumab', 16, 'mg/kg', days, {alt: 'the record also describes a subcutaneous fixed dose of 1800 mg'});
+  reg({id: 'mm-drd', site: 'myeloma', sub: 'Newly diagnosed multiple myeloma, not for transplant', stage: 'both', intent: 'First line', name: 'Daratumumab + lenalidomide + dexamethasone (DRd)', cls: ['targeted'], escalated: true,
+    phases: [P('Cycles 1–2 (daratumumab weekly)', 28, 2, [DARA([1, 8, 15, 22]), LEN25(), DEX40()], {heme: null}),
+      P('Cycles 3–6 (daratumumab every 2 weeks)', 28, 4, [DARA([1, 15]), LEN25(), DEX40()], {heme: null}),
+      P('Cycle 7 onwards (daratumumab every 4 weeks)', 28, 0, [DARA([1]), LEN25(), DEX40()], {heme: null, until: 'until progression'})],
+    down: 'mm-rd', refs: [CT('NCT02252172', 'MAIA')]});
+  reg({id: 'mm-rd', site: 'myeloma', sub: 'Newly diagnosed multiple myeloma, not for transplant', stage: 'both', intent: 'First line', name: 'Lenalidomide + dexamethasone (Rd)', cls: ['targeted'], reduced: true,
+    phases: [P('Lenalidomide + dexamethasone', 28, 0, [LEN25(), DEX40()], {heme: null, until: 'until progression'})], up: 'mm-drd', refs: [CT('NCT02252172', 'MAIA, control arm')]});
+  const OBI_C1 = () => [X('obinutuzumab', 100, 'mg', [1], {label: 'Obinutuzumab, day 1'}), X('obinutuzumab', 900, 'mg', [2], {label: 'Obinutuzumab, day 2'}), X('obinutuzumab', 1000, 'mg', [8, 15], {label: 'Obinutuzumab, days 8 and 15'})];
+  const OBI = () => X('obinutuzumab', 1000, 'mg', [1]);
+  const VEN = (dose, days, label) => daily('venetoclax', dose, days, label ? {label} : {});
+  const CLB = () => X('chlorambucil', 0.5, 'mg/kg', [1, 15]);
+  const SPLIT = 'The record allows 1000 mg on day 1 in place of 100 mg on day 1 and 900 mg on day 2.';
+  reg({id: 'cll-ven-obi', site: 'cll', sub: 'Chronic lymphocytic leukemia, previously untreated', stage: 'both', intent: 'First line, fixed duration (12 cycles)', name: 'Venetoclax + obinutuzumab', cls: ['targeted'],
+    phases: [P('Cycle 1 (obinutuzumab; venetoclax from day 22)', 28, 1, OBI_C1().concat([VEN(20, d(22, 28), 'Venetoclax 20 mg, days 22–28')]), {heme: null, note: SPLIT + ' ' + TLS}),
+      P('Cycle 2 (venetoclax ramp-up)', 28, 1, [OBI(), VEN(50, d(1, 7), 'Venetoclax 50 mg, days 1–7'), VEN(100, d(8, 14), 'Venetoclax 100 mg, days 8–14'), VEN(200, d(15, 21), 'Venetoclax 200 mg, days 15–21'), VEN(400, d(22, 28), 'Venetoclax 400 mg, days 22–28')], {heme: null, note: TLS}),
+      P('Cycles 3–6', 28, 4, [OBI(), VEN(400, d(1, 28))], {heme: null}),
+      P('Cycles 7–12 (venetoclax alone)', 28, 6, [VEN(400, d(1, 28))], {heme: null})],
+    refs: [CT('NCT02242942', 'CLL14')]});
+  reg({id: 'cll-clb-obi', site: 'cll', sub: 'Chronic lymphocytic leukemia, previously untreated, with other illnesses', stage: 'both', intent: 'First line, fixed duration (12 cycles)', name: 'Chlorambucil + obinutuzumab', cls: ['chemo', 'targeted'], reduced: true,
+    phases: [P('Cycle 1', 28, 1, OBI_C1().concat([CLB()]), {heme: null, note: SPLIT}), P('Cycles 2–6', 28, 5, [OBI(), CLB()], {heme: null}), P('Cycles 7–12 (chlorambucil alone)', 28, 6, [CLB()], {heme: null})],
+    refs: [CT('NCT02242942', 'CLL14, control arm')]});
+  reg({id: 'cll-br', site: 'cll', sub: 'Chronic lymphocytic leukemia, previously untreated', stage: 'both', intent: 'First line (6 cycles)', name: 'Bendamustine + rituximab (BR)', cls: ['chemo', 'targeted'],
+    phases: [P('Cycle 1', 28, 1, [X('rituximab', 375, 'mg/m2', [1]), X('bendamustine', 90, 'mg/m2', [1, 2])], {note: 'The 28-day cycle is taken from the StiL record for the same combination; the SEQUOIA record does not state the cycle length.'}),
+      P('Cycles 2–6', 28, 5, [X('rituximab', 500, 'mg/m2', [1]), X('bendamustine', 90, 'mg/m2', [1, 2])])],
+    refs: [CT('NCT03336333', 'SEQUOIA, control arm'), CT('NCT00991211', 'StiL NHL1')]});
+  reg({id: 'cll-zanubrutinib', site: 'cll', sub: 'Chronic lymphocytic leukemia', stage: 'both', intent: 'First line, continuous', name: 'Zanubrutinib', cls: ['targeted'],
+    phases: [P('Zanubrutinib', 28, 0, [X('zanubrutinib', 160, 'mg', d(1, 28), {freq: 'twice daily'})], {heme: null, until: 'until progression'})], refs: [CT('NCT03336333', 'SEQUOIA')]});
+
+  /* =============================== ENDOCRINE AND NEUROENDOCRINE =============================== */
+  reg({id: 'thyroid-lenvatinib', site: 'thyroid', sub: 'Differentiated thyroid cancer, radioiodine-refractory, progressive', stage: 'late', intent: 'First line', name: 'Lenvatinib', cls: ['targeted'],
+    phases: [P('Lenvatinib', 28, 0, [daily('lenvatinib', 24, d(1, 28))], {heme: null, until: 'until progression'})], refs: [CT('NCT01321554', 'SELECT')]});
+  reg({id: 'thyroid-sorafenib', site: 'thyroid', sub: 'Differentiated thyroid cancer, radioiodine-refractory, progressive', stage: 'late', intent: 'First line', name: 'Sorafenib', cls: ['targeted'],
+    phases: [P('Sorafenib', 28, 0, [one('hcc-sorafenib', 'sorafenib')], {heme: null, until: 'until progression'})], refs: [CT('NCT00984282', 'DECISION')]});
+  reg({id: 'net-lanreotide', site: 'net', sub: 'Well-differentiated gastroenteropancreatic NET, non-functioning', stage: 'late', intent: 'First line', name: 'Lanreotide', cls: ['hormone'],
+    phases: [P('Lanreotide', 28, 0, [X('lanreotide', 120, 'mg', [1])], {heme: null, until: 'until progression'})], refs: [CT('NCT00353496', 'CLARINET')]});
+  reg({id: 'net-sunitinib', site: 'net', sub: 'Pancreatic NET, advanced, progressive', stage: 'late', intent: 'Progressive disease', name: 'Sunitinib (continuous daily dose)', cls: ['targeted'],
+    phases: [P('Sunitinib', 28, 0, [daily('sunitinib', 37.5, d(1, 28), {alt: 'the record allows 25 mg or 50 mg daily'})], {heme: null, until: 'until progression'})], refs: [CT('NCT00428597', 'Sunitinib in pancreatic NET')]});
+  reg({id: 'net-everolimus', site: 'net', sub: 'Pancreatic NET, advanced, progressive', stage: 'late', intent: 'Progressive disease', name: 'Everolimus', cls: ['targeted'],
+    phases: [P('Everolimus', 28, 0, [daily('everolimus', 10, d(1, 28))], {heme: null, until: 'until progression'})], refs: [CT('NCT00510068', 'RADIANT-3')]});
+
+  STP.ADDED_2026_11_21 = STP.REGIMENS.filter(r => r.refs).map(r => r.id);
+})(typeof globalThis !== 'undefined' ? globalThis : window);
+/* Tumor subtypes. Each tumor site has a short list of subtypes, and every regimen is listed under each subtype it is an
+   option for (a regimen may appear under several). The older free text of a regimen is kept as `detail`.
+   The lists follow the way the NCCN guideline for each site is organized by name only: no guideline text is copied.
+   Rule checked by the tests: every subtype offers at least two regimens.
+   © 2026 Prof. Dr. Mohammad Sabry Alkady — Alkady Oncology Center. */
+;(function (root) {
+  'use strict';
+  const STP = root.STP;
+  STP.SUBTYPES = {
+    breast: ['Hormone receptor-positive, HER2-negative', 'HER2-positive', 'Triple-negative'],
+    nsclc: ['Non-squamous, no driver mutation', 'Squamous, no driver mutation', 'EGFR-mutated', 'ALK-rearranged'],
+    sclc: ['Limited stage', 'Extensive stage'],
+    colorectal: ['Colon cancer', 'Rectal cancer', 'RAS and BRAF wild-type (anti-EGFR options)', 'BRAF V600E-mutated', 'MSI-high or mismatch repair-deficient'],
+    gastric: ['Gastric and junctional adenocarcinoma, HER2-negative', 'Gastric and junctional adenocarcinoma, HER2-positive', 'Esophageal cancer'],
+    pancreas: ['Pancreatic adenocarcinoma'],
+    hcc: ['Hepatocellular carcinoma'],
+    biliary: ['Cholangiocarcinoma and gallbladder cancer'],
+    anal: ['Anal squamous cell carcinoma, advanced'],
+    ovary: ['Epithelial ovarian cancer: first line', 'Epithelial ovarian cancer: platinum-sensitive relapse', 'Epithelial ovarian cancer: platinum-resistant relapse'],
+    uterine: ['Mismatch repair-deficient (dMMR or MSI-high)', 'Mismatch repair-proficient (pMMR)'],
+    cervix: ['Locally advanced', 'Persistent, recurrent or metastatic'],
+    hn: ['Squamous cell carcinoma of the head and neck', 'Nasopharyngeal carcinoma'],
+    bladder: ['Urothelial carcinoma'],
+    prostate: ['Metastatic hormone-sensitive', 'Metastatic castration-resistant'],
+    kidney: ['Clear cell renal cell carcinoma'],
+    testis: ['Germ cell tumor (seminoma and non-seminoma)'],
+    melanoma: ['BRAF V600-mutated', 'BRAF wild-type'],
+    cns: ['Glioblastoma'],
+    sarcoma: ['Soft tissue sarcoma', 'Gastrointestinal stromal tumor (GIST)'],
+    dlbcl: ['Diffuse large B-cell lymphoma', 'Follicular and other indolent B-cell lymphomas'],
+    hodgkin: ['Classic Hodgkin lymphoma'],
+    aml: ['Acute myeloid leukemia'],
+    mds: ['Myelodysplastic syndromes'],
+    myeloma: ['Multiple myeloma'],
+    cml: ['Chronic myeloid leukemia, chronic phase'],
+    cll: ['Chronic lymphocytic leukemia / small lymphocytic lymphoma'],
+    thyroid: ['Differentiated thyroid cancer, radioiodine-refractory'],
+    net: ['Gastroenteropancreatic neuroendocrine tumors, well differentiated']
+  };
+  /* regimen → positions in the list of its site */
+  const M = {
+    'breast-ac-t': [0, 2], 'breast-ddac-t': [0, 2], 'breast-tc': [0, 2], 'breast-tchp': [1], 'breast-ac-thp': [1], 'breast-pac-trastuzumab': [1], 'breast-thp-mbc': [1], 'breast-tdm1-adj': [1],
+    'breast-tdxd': [1, 0, 2], 'breast-kn522': [2], 'breast-pembro-nabp': [2], 'breast-sacituzumab': [2, 0], 'breast-capecitabine': [0, 2], 'breast-palbo-ai': [0], 'breast-ribo-ai': [0], 'breast-abema-fulv': [0],
+    'breast-tamoxifen': [0], 'breast-ai': [0], 'breast-olaparib': [0, 2],
+    'nsclc-pembro': [0, 1], 'nsclc-carbo-pem-pembro': [0], 'nsclc-carbo-pac-pembro': [1], 'nsclc-cis-pem-adj': [0], 'nsclc-durvalumab': [0, 1], 'nsclc-carbo-pac-rt': [0, 1],
+    'nsclc-osimertinib': [2], 'nsclc-osi-chemo': [2], 'nsclc-alectinib': [3], 'nsclc-lorlatinib': [3],
+    'sclc-cis-etop-rt': [0], 'sclc-durva-consolidation': [0], 'sclc-carbo-etop-atezo': [1], 'sclc-carbo-etop': [1],
+    'crc-folfox': [0, 1], 'crc-capox': [0, 1], 'crc-folfiri': [0, 1], 'crc-lonsurf-bev': [0, 1], 'crc-capecitabine': [0], 'rectal-cape-rt': [1],
+    'crc-folfox-cetuximab': [2], 'crc-folfiri-cetuximab': [2], 'crc-enco-cetux': [3], 'crc-enco-cetux-folfox': [3], 'crc-pembro': [4], 'crc-nivo-ipi': [4], 'crc-nivolumab': [4],
+    'gastric-flot': [0, 1], 'gastric-folfox-nivo': [0, 2], 'gastric-pac-ram': [0, 1], 'gastric-toga': [1], 'gastric-pembro-tras-capox': [1], 'gastric-pembro-tras-fp': [1], 'eso-cross': [2], 'eso-pembro-cf': [2],
+    'panc-folfirinox': [0], 'panc-mfolfirinox': [0], 'panc-gem-nabp': [0], 'panc-gem': [0],
+    'hcc-atezo-bev': [0], 'hcc-stride': [0], 'hcc-lenvatinib': [0], 'hcc-sorafenib': [0],
+    'biliary-gemcis-durva': [0], 'biliary-gemcis-pembro': [0], 'biliary-gemcis': [0],
+    'anal-carbo-pac': [0], 'anal-cis-fu': [0],
+    'ovary-carbo-pac': [0, 1], 'ovary-olaparib': [0, 1], 'ovary-carbo-pld': [1], 'ovary-pac-weekly-bev': [2], 'ovary-pld-bev': [2], 'ovary-topotecan-bev': [2],
+    'endo-carbo-pac-pembro': [0, 1], 'endo-carbo-pac': [0, 1], 'endo-pembro-lenva': [1],
+    'cervix-cis-rt': [0], 'cervix-pembro-crt': [0], 'cervix-pembro-pac-cis': [1], 'cervix-pembro-pac-carbo': [1],
+    'hn-cis-rt': [0, 1], 'hn-cis-weekly-rt': [0], 'hn-pembro-pf': [0], 'hn-nivolumab': [0], 'npc-gp-induction': [1],
+    'bladder-gemcis': [0], 'bladder-gemcarbo': [0], 'bladder-ev-pembro': [0],
+    'prostate-docetaxel': [0, 1], 'prostate-abiraterone': [0, 1], 'prostate-enzalutamide': [0, 1], 'prostate-apalutamide': [0], 'prostate-cabazitaxel': [1], 'prostate-olaparib': [1],
+    'rcc-pembro-axitinib': [0], 'rcc-nivo-ipi': [0], 'rcc-lenva-pembro': [0], 'rcc-sunitinib': [0], 'rcc-pembro-adj': [0],
+    'testis-bep': [0], 'testis-ep': [0],
+    'mel-pembro': [0, 1], 'mel-nivo-ipi': [0, 1], 'mel-dab-tram': [0],
+    'gbm-stupp': [0], 'gbm-lomustine': [0], 'gbm-lomustine-bev': [0],
+    'sarcoma-doxorubicin': [0], 'sarcoma-dox-ifos': [0], 'gist-imatinib': [1], 'gist-sunitinib': [1], 'gist-regorafenib': [1],
+    'dlbcl-rchop': [0, 1], 'dlbcl-rminichop': [0], 'dlbcl-pola-r-chp': [0], 'fl-br': [1],
+    'hl-abvd': [0], 'hl-a-avd': [0],
+    'aml-7-3': [0], 'aml-aza-ven': [0], 'aml-azacitidine': [0],
+    'mds-azacitidine': [0], 'mds-lenalidomide': [0],
+    'mm-vrd-weekly': [0], 'mm-rvd-lite': [0], 'mm-vrd': [0], 'mm-drd': [0], 'mm-rd': [0],
+    'cml-imatinib': [0], 'cml-dasatinib': [0], 'cml-nilotinib': [0],
+    'cll-ven-obi': [0], 'cll-clb-obi': [0], 'cll-br': [0], 'cll-zanubrutinib': [0],
+    'thyroid-lenvatinib': [0], 'thyroid-sorafenib': [0],
+    'net-lanreotide': [0], 'net-sunitinib': [0], 'net-everolimus': [0]
+  };
+  STP.REGIMENS.forEach(r => {
+    const list = STP.SUBTYPES[r.site] || [], idx = M[r.id] || [];
+    r.detail = r.sub;
+    r.subs = idx.map(i => list[i]).filter(Boolean);
+    r.sub = r.subs.join(' · ');
+  });
+  STP.subsOf = reg => (reg && Array.isArray(reg.subs) && reg.subs.length ? reg.subs : [reg && reg.sub ? reg.sub : 'Not classified']);
+  /* regimens by subtype, in library order */
+  STP.optionsFor = (site, sub) => STP.REGIMENS.filter(r => r.site === site && r.subs.includes(sub));
 })(typeof globalThis !== 'undefined' ? globalThis : window);
 /* Result of the November 2026 source check, by regimen. "match" means a machine-written extract of the named public
    source agreed with the library value; it is a pointer for the clinician and pharmacist who verify the regimen, not
@@ -1190,6 +1563,204 @@ details.more > summary { cursor: pointer; font-weight: 500; color: var(--teal); 
     'cml-imatinib': [m, 'Dose matched ELN 2020 and the label rules for chronic phase.'],
     'cml-dasatinib': [m, 'Dose matched ELN 2020 and the label rules for chronic phase.'],
     'cml-nilotinib': [m, 'Capsule dose and fasting rule matched the Tasigna label; the newer tablet has its own dose.']
+  };
+})(typeof globalThis !== 'undefined' ? globalThis : window);
+/* Source notes for the regimens added on 21 Nov 2026. "trial" means the dose was read that day in the registered trial
+   record or the published abstract named here: it is not a comparison with the drug label or with a guideline.
+   "copy" means the doses are copied from an older regimen of this library. Neither is a verification.
+   © 2026 Prof. Dr. Mohammad Sabry Alkady — Alkady Oncology Center. */
+;(function (root) {
+  'use strict';
+  const STP = root.STP, t = 'trial', c = 'copy', p = 'partial';
+  const NOT = ' Not yet compared with the label or a guideline.';
+  Object.assign(STP.CHECKS, {
+    'nsclc-osi-chemo': [t, 'Doses, the four combination cycles and the maintenance are those of the FLAURA2 record (NCT04035486).' + NOT],
+    'nsclc-lorlatinib': [t, 'Dose from the CROWN record (NCT03052608). Lorlatinib is a dose-only entry: this library has no organ-function rules or interactions for it.'],
+    'nsclc-carbo-pac-rt': [p, 'Doses, weekly × 6 and the premedication were read from BC Cancer LULACATRT (rev. 1 Aug 2025) through a machine extract. The extract gave platelets 50 as the threshold; this page applies 100 until the centre confirms the figure in the protocol.'],
+    'sclc-durva-consolidation': [t, 'Dose and interval from the ADRIATIC record (NCT03703297). The record text read does not give the duration.'],
+    'sclc-carbo-etop': [t, 'Doses from the chemotherapy arm of the KEYNOTE-604 record (NCT03066778). The number of cycles is not in the record text read.'],
+    'crc-folfiri-cetuximab': [c, 'FOLFIRI and cetuximab doses are copied from two regimens of this library. The BREAKWATER record (NCT04607421) lists the same doses in its lead-in cohort.'],
+    'crc-enco-cetux': [t, 'Doses from the BREAKWATER record (NCT04607421). Encorafenib is a dose-only entry. The line of therapy was not checked against the label.'],
+    'crc-enco-cetux-folfox': [t, 'Doses from the BREAKWATER record (NCT04607421); mFOLFOX6 as elsewhere in this library. Encorafenib is a dose-only entry.'],
+    'crc-nivo-ipi': [t, 'Doses and schedule from the CheckMate 8HW abstract (PubMed 39874977). The duration is not in the abstract.'],
+    'crc-nivolumab': [t, 'Doses and schedule of the nivolumab arm in the CheckMate 8HW abstract (PubMed 39874977).'],
+    'eso-pembro-cf': [t, 'Doses and days from the KEYNOTE-590 record (NCT03189719). The PD-L1 requirement of the label was not checked.'],
+    'gastric-pembro-tras-capox': [t, 'Doses and days from the KEYNOTE-811 record (NCT03615326). The PD-L1 requirement of the label was not checked.'],
+    'gastric-pembro-tras-fp': [t, 'Doses and days from the KEYNOTE-811 record (NCT03615326). The PD-L1 requirement of the label was not checked.'],
+    'biliary-gemcis': [t, 'Doses and days agree with the control arm in the KEYNOTE-966 abstract (PubMed 37075781) and with the durvalumab regimen of this library.'],
+    'biliary-gemcis-pembro': [t, 'Doses, days and the cisplatin maximum from the KEYNOTE-966 abstract (PubMed 37075781).'],
+    'anal-carbo-pac': [t, 'Doses and days from the InterAACT record (NCT02051868). The number of cycles is not in the record text read. Chemoradiation regimens for localized disease are not in the library yet.'],
+    'anal-cis-fu': [t, 'Doses and days from the InterAACT record (NCT02051868). The number of cycles is not in the record text read.'],
+    'ovary-carbo-pld': [t, 'Doses, interval and six cycles from the CALYPSO record (NCT00189553). Pegylated liposomal doxorubicin is a dose-only entry.'],
+    'ovary-pac-weekly-bev': [t, 'Doses and days from the AURELIA record (NCT00976911); dose levels of weekly paclitaxel as elsewhere in this library.'],
+    'ovary-pld-bev': [t, 'Doses and days from the AURELIA record (NCT00976911). Pegylated liposomal doxorubicin is a dose-only entry.'],
+    'ovary-topotecan-bev': [p, 'Weekly dose and days from the AURELIA record (NCT00976911). The record writes the alternative 5-day dose with two different units, so only the weekly schedule is in the library. Topotecan is a dose-only entry.'],
+    'endo-pembro-lenva': [t, 'Doses and the 35-cycle limit from the KEYNOTE-775 record (NCT03517449). The mismatch-repair requirement of the label was not checked.'],
+    'endo-carbo-pac': [c, 'Doses are copied from the pembrolizumab regimen of this library, without pembrolizumab.'],
+    'cervix-pembro-crt': [t, 'Pembrolizumab schedule and weekly cisplatin 40 mg/m² from the KEYNOTE-A18 record (NCT04221945); the cisplatin cap and thresholds are copied from the chemoradiation regimen of this library.'],
+    'cervix-pembro-pac-cis': [t, 'Doses and limits from the KEYNOTE-826 record (NCT03635567). The PD-L1 requirement of the label was not checked.'],
+    'cervix-pembro-pac-carbo': [t, 'Doses and limits from the KEYNOTE-826 record (NCT03635567). The PD-L1 requirement of the label was not checked.'],
+    'npc-gp-induction': [t, 'Doses, days and three cycles from the registered trial NCT01872962.' + NOT],
+    'prostate-cabazitaxel': [t, 'Doses and interval from the TROPIC record (NCT00417079). The maximum number of cycles is not in the record text read. Cabazitaxel is a dose-only entry: premedication and growth-factor rules come from the label.'],
+    'prostate-apalutamide': [t, 'Dose from the TITAN record (NCT02489318). Apalutamide is a dose-only entry.'],
+    'prostate-olaparib': [t, 'Dose from the PROfound record (NCT02987543). The list of qualifying genes was not checked against the label.'],
+    'rcc-lenva-pembro': [t, 'Doses from the CLEAR record (NCT02811861). The maximum duration of pembrolizumab is not in the record text read.'],
+    'rcc-sunitinib': [t, 'Dose and the 4-weeks-on, 2-weeks-off schedule from the CLEAR and CheckMate 214 records. Sunitinib is a dose-only entry.'],
+    'testis-ep': [c, 'Etoposide and cisplatin doses are copied from BEP of this library. The number of EP cycles was not opened in a source: it is left to the protocol your unit follows.'],
+    'gbm-lomustine': [t, 'Dose, cap and interval from the EORTC 26101 record (NCT01290939). Lomustine is a dose-only entry.'],
+    'gbm-lomustine-bev': [t, 'Doses, caps and intervals from the EORTC 26101 record (NCT01290939). Lomustine is a dose-only entry.'],
+    'sarcoma-dox-ifos': [p, 'Doxorubicin 25 mg/m² on days 1–3 and ifosfamide 10 g/m² over 4 days are from the EORTC 62012 abstract (PubMed 24618336). The daily split of ifosfamide, its infusion time and the mesna dose are not in the abstract.'],
+    'gist-imatinib': [p, 'Imatinib 400 mg daily is the adjuvant dose in the SSG XVIII record (NCT00116935). The dose for advanced disease was not opened in a source.'],
+    'gist-sunitinib': [t, 'Dose and schedule from the registered trial NCT00075218. Sunitinib is a dose-only entry.'],
+    'gist-regorafenib': [t, 'Dose and schedule from the GRID record (NCT01271712). Regorafenib is a dose-only entry.'],
+    'dlbcl-pola-r-chp': [t, 'Doses, six cycles and the two rituximab cycles from the POLARIX record (NCT03274492). Polatuzumab vedotin is a dose-only entry.'],
+    'fl-br': [t, 'Doses and the 4-week interval from the StiL NHL1 record (NCT00991211). The number of cycles is not in the record text read. Bendamustine is a dose-only entry.'],
+    'hl-a-avd': [t, 'Doses and days from the ECHELON-1 record (NCT01712490). The number of cycles and the growth-factor rule are not in the record text read. Brentuximab vedotin is a dose-only entry.'],
+    'aml-aza-ven': [t, 'Doses and the three-day ramp-up from the VIALE-A record (NCT02993523). Dose changes with antifungals and the tumour lysis measures come from the label. Both drugs are dose-only entries.'],
+    'aml-azacitidine': [t, 'Dose and days of the control arm in the VIALE-A record (NCT02993523). Azacitidine is a dose-only entry.'],
+    'mds-azacitidine': [t, 'Dose and days from the AZA-001 record (NCT00071799). Azacitidine is a dose-only entry.'],
+    'mds-lenalidomide': [t, 'Dose and days from the MDS-004 record (NCT00179621).'],
+    'mm-drd': [t, 'Doses and the daratumumab schedule from the MAIA record (NCT02252172). Daratumumab is a dose-only entry: premedication comes from the label.'],
+    'mm-rd': [t, 'Doses and days of the control arm in the MAIA record (NCT02252172).'],
+    'cll-ven-obi': [t, 'Doses, days and the five-week ramp-up from the CLL14 record (NCT02242942). Both drugs are dose-only entries.'],
+    'cll-clb-obi': [t, 'Doses and days of the control arm in the CLL14 record (NCT02242942). Both drugs are dose-only entries.'],
+    'cll-br': [p, 'Doses from the control arm of the SEQUOIA record (NCT03336333). That record does not state the cycle length: 28 days is taken from the StiL record for the same combination.'],
+    'cll-zanubrutinib': [t, 'Dose from the SEQUOIA record (NCT03336333). Zanubrutinib is a dose-only entry.'],
+    'thyroid-lenvatinib': [t, 'Dose from the SELECT record (NCT01321554).'],
+    'thyroid-sorafenib': [t, 'Dose from the DECISION record (NCT00984282).'],
+    'net-lanreotide': [t, 'Dose and interval from the CLARINET record (NCT00353496). Lanreotide is a dose-only entry.'],
+    'net-sunitinib': [t, 'Continuous daily dose from the registered trial NCT00428597. Sunitinib is a dose-only entry.'],
+    'net-everolimus': [t, 'Dose from the RADIANT-3 record (NCT00510068). Everolimus is a dose-only entry.']
+  });
+})(typeof globalThis !== 'undefined' ? globalThis : window);
+/* Import of a clinic protocol from Alkady OncoFile ("oncofile-protocol/1" JSON) as a regimen of this page.
+   The text comes from another page and is treated as data: every string is clipped and printed escaped, numbers are
+   checked, and nothing in it is run. An imported protocol keeps its own medication lines and start criteria; this page
+   adds the dose arithmetic, the documents and, for drugs it knows, the organ-function rules. It stays DRAFT like any regimen.
+   © 2026 Prof. Dr. Mohammad Sabry Alkady — Alkady Oncology Center. */
+;(function (root) {
+  'use strict';
+  const STP = root.STP;
+  const SITE = 'oncofile', SUB = 'Clinic protocols';
+  const UNIT = {'mg/m²': 'mg/m2', 'mg/m2': 'mg/m2', 'mg/kg': 'mg/kg', 'mg': 'mg', 'AUC': 'AUC', 'mcg/m²': 'mcg/m2', 'mcg/m2': 'mcg/m2', 'mcg/kg': 'mcg/kg', 'mcg': 'mcg', 'units/m²': 'units/m2', 'units/m2': 'units/m2', 'units/kg': 'units/kg', 'units': 'units', 'mEq/kg': 'mEq/kg', 'mEq': 'mEq'};
+  const ROLE_CLS = {chemo: 'chemo', targeted: 'targeted', immuno: 'immuno', hormone: 'hormone'};
+  const ALIAS = {'5 fu': 'fluorouracil', '5fu': 'fluorouracil', 'folinic acid': 'leucovorin', 'calcium folinate': 'leucovorin', 'adriamycin': 'doxorubicin', 'taxol': 'paclitaxel', 'taxotere': 'docetaxel', 'herceptin': 'trastuzumab', 'keytruda': 'pembrolizumab', 'opdivo': 'nivolumab', 'avastin': 'bevacizumab', 'xeloda': 'capecitabine', 'gemzar': 'gemcitabine', 'endoxan': 'cyclophosphamide', 'zoladex': 'goserelin'};
+  const clip = (v, n) => String(v == null ? '' : v).replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n);
+  const norm = s => String(s == null ? '' : s).toLowerCase().replace(/\(.*?\)/g, ' ').replace(/[^a-z0-9]+/g, ' ').trim();
+  const slug = s => norm(s).replace(/ /g, '-').slice(0, 40) || 'protocol';
+  /* OncoFile keeps notes as lines in English and Arabic; older exports of this page keep one string */
+  const linesText = (v, n) => (Array.isArray(v) ? v.slice(0, 30).map(x => clip(x && typeof x === 'object' ? (x.en || x.text || x.ar) : x, 240)).filter(Boolean).join('; ') : clip(v, n)).slice(0, n);
+
+  STP.IMPORTED = [];
+  STP.CHECK_NAMES.own = 'Clinic protocol from OncoFile — not compared with a source by this page';
+  STP.CHECK_NAMES.trial = 'From a registered trial record or abstract — not yet compared with the label or a guideline';
+  STP.CHECK_NAMES.copy = 'Doses copied from another regimen of this library';
+
+  STP.matchDrug = function (name) {
+    const n = norm(name); if (!n) return null;
+    const full = x => String(x == null ? '' : x).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(), f = full(name);
+    const keys = Object.keys(STP.DRUGS).filter(k => !STP.DRUGS[k].custom);
+    return keys.find(k => full(STP.DRUGS[k].name) === f) || keys.find(k => norm(STP.DRUGS[k].name) === n) || keys.find(k => k === n.replace(/ /g, '-')) || (ALIAS[n] && STP.DRUGS[ALIAS[n]] ? ALIAS[n] : null);
+  };
+  /* "30 min", "over 1 hour", "2 h", "46 hours" → minutes */
+  STP.minutesFromText = function (t) {
+    const s = String(t || '').toLowerCase(); let m = /(\d+(?:\.\d+)?)\s*(?:h\b|hr|hour)/.exec(s);
+    if (m) return Math.round(Number(m[1]) * 60);
+    m = /(\d+)\s*min/.exec(s); return m ? Number(m[1]) : null;
+  };
+  const daysOf = (v, cycleDays) => {
+    const raw = Array.isArray(v) ? v : String(v == null ? '' : v).split(/[^0-9-]+/);
+    const out = [];
+    raw.forEach(x => { const s = String(x); const r = /^(\d+)-(\d+)$/.exec(s); if (r) { for (let i = Number(r[1]); i <= Number(r[2]) && out.length < 60; i++) out.push(i); } else if (/^\d+$/.test(s)) out.push(Number(s)); });
+    const ok = Array.from(new Set(out.filter(n => n >= 1 && n <= cycleDays))).sort((a, b) => a - b);
+    return ok.length ? ok : [1];
+  };
+
+  /* text → object, or null when it is not a protocol */
+  STP.parseProtocolText = function (text) {
+    const s = String(text || ''), a = s.indexOf('{'), b = s.lastIndexOf('}');
+    if (a < 0 || b <= a || b - a > 200000) return null;
+    let o; try { o = JSON.parse(s.slice(a, b + 1)); } catch (err) { return null; }
+    if (o && o.protocol && typeof o.protocol === 'object') o = o.protocol;
+    if (!o || typeof o !== 'object' || Array.isArray(o) || !Array.isArray(o.drugs) || !clip(o.name, 80)) return null;
+    return o;
+  };
+
+  /* OncoFile protocol → regimen; returns {reg, warnings} */
+  STP.protocolToRegimen = function (o) {
+    const warnings = [], name = clip(o.name, 80), cd = Math.round(Number(o.cycleDays)), cycleDays = cd >= 1 && cd <= 365 ? cd : 21;
+    if (!(cd >= 1 && cd <= 365)) warnings.push('The cycle length was not readable: 21 days were assumed.');
+    const id = SITE + '-' + slug(name), items = [], pre = [], post = [], crit = [], cls = new Set();
+    (o.drugs || []).slice(0, 40).forEach((g, i) => {
+      if (!g || typeof g !== 'object') return;
+      const nm = clip(g.name, 60); if (!nm) return;
+      const role = clip(g.role, 12), basis = clip(g.basis, 12), unit = UNIT[basis], dose = Number(g.dose), days = daysOf(g.days, cycleDays);
+      const how = [clip(g.route, 12), clip(g.time, 60), clip(g.solution, 80)].filter(Boolean).join(', '), note = clip(g.note || g.en, 240);
+      const text = nm + (clip(g.brand, 40) ? ' (' + clip(g.brand, 40) + ')' : '') + (dose > 0 ? ' ' + dose + ' ' + basis : (clip(g.dose, 20) ? ' ' + clip(g.dose, 20) : '')) + (how ? ', ' + how : '') + (note ? '. ' + note : '');
+      if (!ROLE_CLS[role]) { pre.push({t: text, days: g.days == null || g.days === '' ? [] : days}); return; }
+      if (!(dose > 0) || !unit) { warnings.push(nm + ': the dose or its unit was not readable, so it is not on the order. Add it by hand.'); crit.push(nm + ' is part of this protocol but its dose could not be read from OncoFile: add it by hand'); return; }
+      const mins = STP.minutesFromText(g.time);
+      let key = STP.matchDrug(nm);
+      if (key === 'fluorouracil' && mins != null && mins > 720) key = 'fluorouracil-civi';   /* an infusion over many hours is the continuous-infusion entry */
+      if (!key) {
+        key = 'x:' + id + ':' + i;
+        STP.DRUGS[key] = {key, name: nm, cls: ROLE_CLS[role], route: clip(g.route, 6) || 'IV', min: null, emet: null, admin: '', rules: [], pre: [], post: [], notes: [], cool: [], x: {}, custom: true};
+      }
+      cls.add(ROLE_CLS[role]);
+      const max = Number(String(g.max == null ? '' : g.max).replace(/[^0-9.]/g, ''));
+      const it = {drug: key, dose, unit, days, label: nm};
+      if (clip(g.route, 6)) it.route = clip(g.route, 6);
+      if (how) it.admin = how;
+      if (mins != null && mins > 720) { it.hours = Math.round(mins / 60); it.min = 10; } else if (mins != null) { it.min = mins; it.min1 = mins; }
+      if (max > 0) it.max = max;
+      if (clip(g.per, 8) === '/day') it.perDay = true;
+      if (note) it.note = note;
+      items.push(it);
+    });
+    (Array.isArray(o.postMeds) ? o.postMeds : []).slice(0, 30).forEach(m => { const t = clip(m && typeof m === 'object' ? (m.en || m.text || m.ar) : m, 240); if (t) post.push({t}); });
+    let heme = null;
+    (o.criteria || []).slice(0, 30).forEach(c => {
+      const test = clip(c && c.test, 60), rule = clip(c && c.rule, 80); if (!test && !rule) return;
+      const v = /(\d+(?:\.\d+)?)/.exec(rule), n = v ? Number(v[1]) : null, low = /≥|>=|at least|or more|above|>/.test(rule);
+      if (/\b(anc|neutrophil)/i.test(test) && n != null && low) { heme = heme || {}; heme.anc = n >= 100 ? n / 1000 : n; }
+      else if (/\b(plt|platelet)/i.test(test) && n != null && low) { heme = heme || {}; heme.plt = n >= 1000 ? n / 1000 : n; }
+      else crit.push('Clinic criterion: ' + test + ' ' + rule);
+    });
+    if (!items.length) return {reg: null, warnings: warnings.concat(['No treatment drug with a readable dose was found in this protocol.'])};
+    const phase = {label: name, cycleDays, cycles: 0, items, own: true, pre, post, critNotes: crit, heme, until: clip(o.course, 80)};
+    const notes = [linesText(o.notes, 400), linesText(o.monitoring, 300) ? 'Monitoring: ' + linesText(o.monitoring, 300) : '', clip(o.labOrders, 200) ? 'Tests before each cycle: ' + clip(o.labOrders, 200) : ''].filter(Boolean);
+    const reg = {id, site: SITE, sub: SUB, subs: [SUB], detail: '', stage: 'both', intent: clip(o.course, 80) || 'Clinic protocol', name, cls: Array.from(cls), phases: [phase], notes,
+      imported: {reference: clip(o.reference, 240), at: STP.todayISO()},
+      check: {status: 'own', text: 'Imported from Alkady OncoFile as the clinic wrote it. This page did not compare it with a source.'}};
+    return {reg, warnings};
+  };
+
+  const dropCustom = id => Object.keys(STP.DRUGS).forEach(k => { if (k.indexOf('x:' + id + ':') === 0) delete STP.DRUGS[k]; });
+  const persist = () => { try { STP.store.set('imported', STP.IMPORTED.map(r => r.imported.raw)); } catch (err) { /* storage may be unavailable */ } };
+  const ensureSite = () => {
+    if (!STP.SITES[SITE]) { STP.SITES[SITE] = {name: 'Clinic protocols from OncoFile', group: 'Clinic protocols (OncoFile)', nccn: 'the guideline named in the clinic protocol', pdq: ''}; STP.GROUPS.push('Clinic protocols (OncoFile)'); }
+    if (STP.SUBTYPES) STP.SUBTYPES[SITE] = [SUB];
+  };
+  /* adds or replaces; returns {reg, warnings, replaced} */
+  STP.importProtocol = function (o, opts) {
+    const r = STP.protocolToRegimen(o); if (!r.reg) return r;
+    ensureSite();
+    const i = STP.IMPORTED.findIndex(x => x.id === r.reg.id);
+    r.reg.imported.raw = JSON.parse(JSON.stringify(o));
+    if (i >= 0) STP.IMPORTED[i] = r.reg; else STP.IMPORTED.unshift(r.reg);
+    if (STP.IMPORTED.length > 30) STP.IMPORTED.splice(30).forEach(x => dropCustom(x.id));
+    if (!(opts && opts.quiet)) persist();
+    return {reg: r.reg, warnings: r.warnings, replaced: i >= 0};
+  };
+  STP.removeImported = function (id) {
+    const i = STP.IMPORTED.findIndex(x => x.id === id); if (i < 0) return false;
+    STP.IMPORTED.splice(i, 1); dropCustom(id); persist(); return true;
+  };
+  STP.loadImported = function () {
+    let list = []; try { list = STP.store.get('imported', []); } catch (err) { list = []; }
+    STP.IMPORTED.splice(0).forEach(x => dropCustom(x.id));
+    (Array.isArray(list) ? list : []).slice(0, 30).reverse().forEach(o => { try { if (o && typeof o === 'object') STP.importProtocol(o, {quiet: true}); } catch (err) { /* one bad entry does not stop the rest */ } });
+    return STP.IMPORTED.length;
   };
 })(typeof globalThis !== 'undefined' ? globalThis : window);
 /* Drug–drug interaction checker: a list of common co-medications with interaction tags, and rules that pair those
@@ -1475,8 +2046,10 @@ details.more > summary { cursor: pointer; font-weight: 500; color: var(--teal); 
     return {value: STP.round(STP.roundTo(value, step), 2), text: ''};
   };
 
-  const UNIT_TEXT = {'mg/m2': 'mg/m²', 'mg/kg': 'mg/kg', mg: 'mg', AUC: 'AUC', 'units/m2': 'units/m²', units: 'units'};
-  STP.unitText = u => UNIT_TEXT[u] || u;
+  STP.unitText = u => String(u == null ? '' : u).replace('/m2', '/m²');
+  const PER_M2 = u => /\/m2$/.test(u), PER_KG = u => /\/kg$/.test(u);
+  /* how the total dose reaches the documents when none is typed */
+  STP.TOTAL_MODES = {hand: 'Empty space to write by hand, with the calculated dose as a guide', handonly: 'Empty space to write by hand, no calculated dose', calc: 'The calculated dose'};
   /* "75 mg/m²", but "AUC 6" */
   STP.doseWithUnit = (v, u) => u === 'AUC' ? 'AUC ' + fmt(v) : fmt(v) + ' ' + STP.unitText(u);
   const WORST = {ok: 0, caution: 1, reduce: 2, hold: 3, avoid: 4, missing: 1};
@@ -1501,9 +2074,10 @@ details.more > summary { cursor: pointer; font-weight: 500; color: var(--teal); 
     if (phase.emet && items.some(it => it.days.includes(Math.min.apply(null, STP.phaseDays(phase, 2))))) r = phase.emet === 'high' && r === 'carbo' ? 'carbo' : phase.emet;
     return r;
   };
-  STP.EMET_NAMES = {high: 'High', carbo: 'Moderate to high: three-drug prophylaxis (carboplatin AUC 4 or more, antibody–drug conjugates)', mod: 'Moderate', low: 'Low', min: 'Minimal', oral: 'Oral agent', 'oral-high': 'Oral agent, moderate to high'};
+  STP.EMET_NAMES = {high: 'High', carbo: 'Moderate to high: three-drug prophylaxis (carboplatin AUC 4 or more, antibody–drug conjugates)', own: 'Not classified here (imported protocol with a drug outside the library)', mod: 'Moderate', low: 'Low', min: 'Minimal', oral: 'Oral agent', 'oral-high': 'Oral agent, moderate to high'};
 
   /* ---------- pre- and post-treatment medication ---------- */
+  STP.emetName = k => /^lim:/.test(String(k)) ? (STP.EMET_NAMES[String(k).slice(4)] || String(k).slice(4)) + ' for the classified drugs. One drug of the day is not classified in the library' : (STP.EMET_NAMES[k] || k);
   const NK1 = {aprepitant: 'Aprepitant ("Emend") 125 mg orally 60 minutes before treatment', fosaprepitant: 'Fosaprepitant ("Emend IV") 150 mg IV over 20–30 minutes, 30 minutes before treatment'};
   const HT3 = {palonosetron: 'Palonosetron ("Aloxi") 0.25 mg IV 30 minutes before treatment', ondansetron: 'Ondansetron 8 mg IV (or 16 mg orally) 30 minutes before treatment', granisetron: 'Granisetron 1 mg IV (or 2 mg orally) 30 minutes before treatment'};
   const BREAK = {t: 'For breakthrough nausea: metoclopramide 10 mg up to three times daily for up to 5 days (or prochlorperazine 10 mg)', why: 'A drug of a different class from the prophylaxis.'};
@@ -1561,13 +2135,14 @@ details.more > summary { cursor: pointer; font-weight: 500; color: var(--teal); 
     const ctx = {age, sex: pt.sex, weight: w, site: reg.site, regimen: reg, phase, cycle};
     const missing = [];
     if (bsa == null && phase.items.some(it => /m2/.test(it.unit))) missing.push('Height and weight are needed for the body surface area.');
-    if (!(w > 0) && phase.items.some(it => it.unit === 'mg/kg' || it.byWeight)) missing.push('Weight is needed for weight-based doses.');
+    if (!(w > 0) && phase.items.some(it => PER_KG(it.unit) || it.byWeight)) missing.push('Weight is needed for weight-based doses.');
+    const totalMode = STP.TOTAL_MODES[o.totalMode] ? o.totalMode : 'calc';
 
     const rows = phase.items.map((it, idx) => {
       const dr = STP.DRUGS[it.drug], row = {idx, key: it.drug, name: it.label || dr.name, generic: dr.name, cls: dr.cls, route: it.route || dr.route, unit: it.unit, optional: !!it.opt, alerts: [], item: it};
       row.included = it.opt ? (o.include && o.include[idx] != null ? !!o.include[idx] : !!it.on) : true;
       row.days = (cycle === 1 && it.days1) || it.days; row.daysText = STP.daysText(row.days); row.today = row.days.includes(day);
-      row.freq = it.freq || ''; row.every = it.every || '';
+      row.freq = it.freq || ''; row.every = it.every || ''; row.custom = !!dr.custom; row.limited = !!dr.limited;
       /* protocol dose for this cycle and dose level */
       let proto = it.dose, loading = false;
       if (it.byWeight && w > 0) proto = (it.byWeight.find(b => w >= b.min) || it.byWeight[it.byWeight.length - 1]).dose;
@@ -1599,27 +2174,49 @@ details.more > summary { cursor: pointer; font-weight: 500; color: var(--teal); 
       /* amount */
       let base = null, how = '';
       const wt = dr.capKg && w > dr.capKg ? dr.capKg : w;
-      if (it.unit === 'mg/m2' || it.unit === 'units/m2') { if (bsa != null) { base = proto * bsa; how = fmt(proto) + ' × ' + bsa.toFixed(2) + ' m²'; } }
-      else if (it.unit === 'mg/kg') { if (w > 0) { base = proto * wt; how = fmt(proto) + ' × ' + fmt(wt, 1) + ' kg' + (wt !== w ? ' (weight capped at ' + dr.capKg + ' kg)' : ''); } }
+      if (PER_M2(it.unit)) { if (bsa != null) { base = proto * bsa; how = fmt(proto) + ' × ' + bsa.toFixed(2) + ' m²'; } }
+      else if (PER_KG(it.unit)) { if (w > 0) { base = proto * wt; how = fmt(proto) + ' × ' + fmt(wt, 1) + ' kg' + (wt !== w ? ' (weight capped at ' + dr.capKg + ' kg)' : ''); } }
       else if (it.unit === 'AUC') { const cv = STP.calvert(proto, L.crcl); if (cv) { base = cv.dose; how = 'AUC ' + fmt(proto) + ' × (' + fmt(cv.gfr, 0) + ' + 25)' + (cv.capped ? ' — clearance capped at ' + STP.GFR_CAP + ' mL/min' : ''); } else missing.push('Creatinine, age, sex and weight are needed for the carboplatin dose.'); }
       else { base = proto; how = ''; }
       if (it.perDay && base != null) { row.perDayAmount = base; base = base * row.days.length; how += ' × ' + row.days.length + ' days'; }
       row.base = base; row.how = how;
       let amount = base == null ? null : base * row.pct / 100, capNote = '';
       const maxMg = it.max != null ? it.max : (dr.capMg != null ? dr.capMg : null);
-      if (amount != null && maxMg != null && amount > maxMg) { amount = maxMg; capNote = 'capped at ' + fmt(maxMg) + ' ' + (dr.unitsDrug ? 'units' : 'mg'); }
-      row.amount = amount; row.capNote = capNote;
-      const outUnit = /units/.test(it.unit) ? 'units' : 'mg'; row.outUnit = outUnit;
-      const flat = it.unit === 'mg' || it.unit === 'units';
+      const outUnit = it.unit === 'AUC' ? 'mg' : String(it.unit).replace(/\/(m2|kg)$/, ''); row.outUnit = outUnit;
+      if (amount != null && maxMg != null && amount > maxMg) { amount = maxMg; capNote = 'capped at ' + fmt(maxMg) + ' ' + outUnit; }
+      row.amount = amount; row.capNote = capNote; row.maxDose = maxMg;
+      const flat = !PER_M2(it.unit) && !PER_KG(it.unit) && it.unit !== 'AUC';
       const rd = flat && row.pct === 100 && !capNote ? {value: amount, text: ''} : STP.roundDose(amount, it.drug, outUnit);
       row.final = rd.value; row.tablets = rd.text;
       row.doseText = row.final == null ? 'not calculated' : fmt(row.final) + ' ' + outUnit;
       row.status = worst;
       if (fixed) { row.doseText = fixed; row.status = 'reduce'; }
+      /* the dose per m² (or per kg, or the AUC) after the percentage, and the calculation in words */
+      row.perBasis = PER_M2(it.unit) || PER_KG(it.unit) || it.unit === 'AUC';
+      row.adjText = row.perBasis && row.pct !== 100 && !fixed ? STP.doseWithUnit(STP.round(proto * row.pct / 100, 2), it.unit) + ' at ' + row.pct + '%' : '';
+      row.calcText = row.doseText; row.calc = fixed ? null : row.final;
+      row.calcLine = base == null ? 'not calculated' : (row.how ? row.how + (row.pct !== 100 ? ' × ' + row.pct + '%' : '') : (row.pct !== 100 ? row.pct + '% of the fixed dose' : 'fixed dose'));
+      /* the total dose: typed by the prescriber, or the calculated one, or an empty space for handwriting */
+      const rawT = o.total && o.total[idx] != null ? String(o.total[idx]).trim() : '', tv = rawT === '' ? null : num(rawT);
+      row.typed = tv != null && tv > 0 ? tv : null; row.typedBad = rawT !== '' && row.typed == null;
+      row.giveSource = row.typed != null ? 'typed' : (totalMode === 'calc' ? 'calc' : 'hand'); row.totalMode = totalMode;
+      if (row.typed != null) {
+        row.doseText = fmt(row.typed, 3) + ' ' + outUnit; row.give = row.typed;
+        row.pctGiven = base != null && base > 0 ? STP.round(row.typed / base * 100, 0) : null;
+        const per = PER_M2(it.unit) && bsa ? row.typed / bsa : (PER_KG(it.unit) && wt > 0 ? row.typed / wt : null);
+        row.perGiven = per == null ? '' : fmt(it.perDay ? per / row.days.length : per, 1) + ' ' + STP.unitText(it.unit) + (it.perDay ? ' per day' : '');
+        if (maxMg != null && row.typed > maxMg + 1e-9) row.alerts.push({act: 'caution', why: 'The typed dose ' + row.doseText + ' is above the maximum dose of ' + fmt(maxMg) + ' ' + outUnit + ' in this library: confirm', src: 'dose check'});
+        else if (row.pctGiven != null && row.pctGiven > 105) row.alerts.push({act: 'caution', why: 'The typed dose ' + row.doseText + ' is ' + row.pctGiven + '% of the protocol dose: confirm that the escalation is intended', src: 'dose check'});
+        else if (row.calc != null && row.pct < 100 && row.pctOverride == null && row.typed > row.calc * 1.05) row.alerts.push({act: 'caution', why: 'The typed dose ' + row.doseText + ' is above the ' + row.calcText + ' (' + row.pct + '%) advised here from the dose level or the blood tests', src: 'dose check'});
+        if (row.alerts.some(a => a.src === 'dose check') && WORST[row.status] < WORST.caution) row.status = 'caution';
+      } else if (row.giveSource === 'hand') { row.doseText = ''; row.give = null; row.pctGiven = null; row.perGiven = ''; }
+      else { row.give = row.calc; row.pctGiven = null; row.perGiven = ''; }
+      /* what the documents print in the total-dose space */
+      row.giveText = row.doseText ? row.doseText : '__________ ' + outUnit;
       /* administration */
       row.hours = it.hours || null;
       row.minutes = it.min != null ? it.min : dr.min; row.minutes1 = it.min1 != null ? it.min1 : (dr.min1 != null ? dr.min1 : row.minutes);
-      row.admin = dr.admin + (it.hours ? ' over ' + it.hours + ' hours' : '');
+      row.admin = (it.admin || dr.admin) + (it.hours ? ' over ' + it.hours + ' hours' : '');
       row.note = [it.note, it.alt ? 'Alternative: ' + it.alt : '', it.clock || ''].filter(Boolean).join(' ');
       row.with = it.with || null; row.pump = !!dr.pump; row.hyd = it.hyd || dr.hyd || null;
       row.role = dr.cls === 'chemo' ? 'Chemotherapy' : dr.cls === 'immuno' ? 'Immunotherapy' : dr.cls === 'targeted' ? 'Targeted therapy' : 'Hormonal therapy';
@@ -1637,6 +2234,11 @@ details.more > summary { cursor: pointer; font-weight: 500; color: var(--teal); 
     } else if (phase.heme === null) start.push({act: 'ok', why: 'No fixed blood-count threshold for this regimen: consultant decision (see notes)'});
     if (L.hb != null && L.hb < 8) start.push({act: 'caution', why: 'Hemoglobin ' + fmt(L.hb, 1) + ' g/dL: consider transfusion before treatment'});
     if (phase.dayHeme) start.push({act: 'note', why: phase.dayHeme});
+    (phase.critNotes || []).forEach(t => start.push({act: 'note', why: t}));
+    active.filter(r => r.custom).forEach(r => start.push({act: 'note', why: r.generic + ' is not in the drug library of this page: its organ-function dose rules, emetic risk and interactions are not checked here'}));
+    active.filter(r => r.limited).forEach(r => start.push({act: 'note', why: r.generic + ': the library holds its dose and schedule only. Organ-function dose rules, emetic risk and interactions are not checked here: use the prescribing information'}));
+    active.filter(r => r.limited && r.route === 'IV' && r.minutes == null && !(r.item.hours > 0)).forEach(r => start.push({act: 'note', why: 'Infusion time of ' + r.generic + ' is not in the library: add it to the room-time estimate'}));
+    if (reg.refs && phase.heme === undefined && hasCyto) start.push({act: 'note', why: 'The blood-count thresholds above are the general default of this page, not taken from the source of this regimen: confirm them with the protocol your unit follows'});
     const orgMissing = [];
     if (active.some(r => (STP.DRUGS[r.key].rules || []).length)) {
       if (L.bili == null && L.ast == null && L.alt == null) orgMissing.push('Liver tests not entered: liver-based dose rules not checked');
@@ -1647,7 +2249,7 @@ details.more > summary { cursor: pointer; font-weight: 500; color: var(--teal); 
     /* overall status */
     let status = 'proceed';
     const acts = start.map(s => s.act).concat(active.map(r => r.status));
-    if (acts.includes('avoid')) status = 'review'; else if (acts.includes('hold')) status = 'hold'; else if (acts.includes('reduce')) status = 'modify'; else if (acts.includes('missing') || missing.length || active.some(r => r.final == null)) status = 'incomplete'; else if (acts.includes('caution')) status = 'caution';
+    if (acts.includes('avoid')) status = 'review'; else if (acts.includes('hold')) status = 'hold'; else if (acts.includes('reduce')) status = 'modify'; else if (acts.includes('missing') || missing.length || active.some(r => r.final == null && r.typed == null)) status = 'incomplete'; else if (acts.includes('caution')) status = 'caution';
 
     /* medication around the treatment */
     const today = active.filter(r => r.today);
@@ -1677,11 +2279,37 @@ details.more > summary { cursor: pointer; font-weight: 500; color: var(--teal); 
     const startDate = STP.parseISO(o.startDate) ? o.startDate : '';
     const schedule = {days, dates: startDate ? days.map(x => STP.addDays(startDate, x - 1)) : [], next: startDate ? STP.addDays(startDate, phase.cycleDays) : '', cycleDays: phase.cycleDays};
     const site = STP.SITES[reg.site];
-    const refs = [{org: 'NCI PDQ', title: site.name + ' treatment, health professional version', url: site.pdq}, {org: 'NCCN', title: 'NCCN Guidelines®: ' + site.nccn + ' (current version at nccn.org)', url: 'https://www.nccn.org/guidelines/category_1'}]
+    /* a protocol imported from OncoFile brings its own medication lines and criteria */
+    let preOut = drugPre.concat(ae.pre), postOut = ae.post.concat(drugPost), gcsfOut = gcsf, fixedOut = fixedLines, riskOut = risk;
+    if (phase.own) {
+      const custom = today.some(r => r.custom), ownPre = (phase.pre || []).filter(x => !x.days || !x.days.length || x.days.includes(day)), ownPost = phase.post || [];
+      if (custom) riskOut = 'own';
+      if (ownPre.length || ownPost.length) {
+        preOut = ownPre.map(x => ({t: x.t, why: x.why || 'As written in the clinic protocol.'})); postOut = ownPost.map(x => ({t: x.t, why: x.why || 'As written in the clinic protocol.'}));
+        const all = ownPre.concat(ownPost).map(x => x.t).join(' | '), has = re => re.test(all);
+        const gLine = has(/g-?csf|filgrastim|neupogen|neulasta|lenograstim/i);
+        gcsfOut = {mode: 'own', t: gLine ? 'G-CSF support: as written in the lines above' : 'G-CSF support: not written in this protocol; by consultant decision', why: 'This page does not derive growth-factor advice for an imported protocol.'};
+        fixedOut = [{label: 'Emend (aprepitant / fosaprepitant)', value: has(/emend|aprepitant/i) ? 'In this protocol — see the medication lines' : 'Not written in this protocol'},
+          {label: 'Aloxi (palonosetron)', value: has(/aloxi|palonosetron/i) ? 'In this protocol — see the medication lines' : 'Not written in this protocol'},
+          {label: 'G-CSF support', value: gLine ? 'In this protocol — see the medication lines' : 'Not written in this protocol'}];
+      } else if (custom) {
+        preOut = drugPre; postOut = [{t: 'Antiemetics: choose by the emetic risk of each drug', why: 'The emetic risk is not classified here for drugs outside this page\'s library.'}].concat(drugPost);
+      }
+    }
+    /* a drug held with dose and schedule only has no emetic class: the derived lines cover the other drugs of the day */
+    const limToday = phase.own ? [] : Array.from(new Set(today.filter(r => r.limited).map(r => r.generic)));
+    if (limToday.length) {
+      postOut = postOut.concat([{t: 'Antiemetics for ' + limToday.join(', ') + ': choose by the prescribing information', why: 'The emetic risk of this drug is not classified in the library. The other lines cover the other drugs of the day only.'}]);
+      riskOut = 'lim:' + risk;
+      const limInj = Array.from(new Set(today.filter(r => r.limited && r.route !== 'PO').map(r => r.generic)));
+      if (limInj.length) preOut = preOut.concat([{t: 'Premedication for ' + limInj.join(', ') + ': according to the prescribing information', why: 'This library holds only the dose and schedule of this drug, not its premedication.'}]);
+    }
+    const refs = (reg.imported ? [{org: 'Alkady OncoFile', title: 'Clinic protocol "' + reg.name + '"' + (reg.imported.reference ? '; its reference: ' + reg.imported.reference : ''), url: ''}] : [{org: 'NCI PDQ', title: site.name + ' treatment, health professional version', url: site.pdq}, {org: 'NCCN', title: 'NCCN Guidelines®: ' + site.nccn + ' (current version at nccn.org)', url: 'https://www.nccn.org/guidelines/category_1'}])
+      .concat(reg.refs || [])
       .concat([{org: 'FDA / EMA', title: 'Prescribing information: ' + Array.from(new Set(active.map(r => r.generic))).join(', '), url: 'https://dailymed.nlm.nih.gov/dailymed/'}])
       .concat(STP.SOURCES.filter(s => ['NHS / NICE', 'eviQ', 'BC Cancer', 'ASCO'].includes(s.org)));
     return {regimen: reg, site, phase, phaseIndex: pi, cycle, day, days, level, patient: pt, L, bsa, bsaRaw, bsaCapped, bsaFormula: o.bsaFormula || 'mosteller',
-      rows, active, today, start, status, missing: Array.from(new Set(missing)), risk, pre: drugPre.concat(ae.pre), post: ae.post.concat(drugPost), gcsf, fixedLines, notes: (reg.notes || []).concat(phase.note ? [phase.note] : []).concat(phase.alt ? [phase.alt] : []), monitoring: notes, cum, schedule, refs, check: STP.checkOf(reg.id), opts: o};
+      rows, active, today, start, status, missing: Array.from(new Set(missing)), risk: riskOut, pre: preOut, post: postOut, gcsf: gcsfOut, fixedLines: fixedOut, totalMode, notes: (reg.notes || []).concat(phase.note ? [phase.note] : []).concat(phase.alt ? [phase.alt] : []), monitoring: notes, cum, schedule, refs, check: STP.checkOf(reg.id), opts: o};
   };
   STP.STATUS_TEXT = {proceed: 'Criteria met', caution: 'Proceed with caution', modify: 'Dose modification advised', hold: 'Hold or delay advised', review: 'Contraindication flagged — consultant review', incomplete: 'Incomplete — some checks could not be made'};
 
@@ -1720,6 +2348,8 @@ details.more > summary { cursor: pointer; font-weight: 500; color: var(--teal); 
   STP.regimenCautions = function (order) {
     const k = order.today.map(r => r.key), out = [];
     if ((k.includes('doxorubicin') || k.includes('daunorubicin')) && (k.includes('trastuzumab') || k.includes('pertuzumab'))) out.push('An anthracycline and a HER2 antibody are on the same day: this raises cardiotoxicity and is generally avoided.');
+    const unk = Array.from(new Set(order.active.filter(r => r.limited || r.custom).map(r => r.generic)));
+    if (unk.length) out.push(unk.join(', ') + ': not in the interaction library of this page. Check the interactions in the prescribing information.');
     if (k.includes('oxaliplatin')) out.push('Oxaliplatin day: no ice chips or cold drinks; warm the hands and avoid cold air.');
     if (k.includes('bleomycin')) out.push('Bleomycin: check oxygen saturation and ask about cough or breathlessness before the dose.');
     if (order.active.some(r => (STP.DRUGS[r.key].x || {}).immune)) out.push('Checkpoint inhibitor: treat new diarrhea, breathlessness, rash, severe fatigue or headache as a possible immune-related adverse event.');
@@ -1738,7 +2368,7 @@ details.more > summary { cursor: pointer; font-weight: 500; color: var(--teal); 
     order.today.forEach(r => (STP.DRUGS[r.key].cool || []).forEach(c => set.add(c)));
     const blocked = {};
     if (keys.includes('oxaliplatin')) { set.delete('oral'); blocked.oral = 'Not offered: oxaliplatin is given today.'; }
-    if (['dlbcl', 'hodgkin', 'aml', 'myeloma', 'cml'].includes(order.regimen.site)) { set.delete('scalp'); blocked.scalp = 'Not offered with blood cancers.'; }
+    if ((STP.SITES[order.regimen.site] || {}).group === 'Hematologic') { set.delete('scalp'); blocked.scalp = 'Not offered with blood cancers.'; }
     /* time after the infusion depends on the drug: about 20 minutes after docetaxel alone, longer after other drugs (follow the device table) */
     const scalpPost = keys.includes('docetaxel') && !keys.some(k => ['doxorubicin', 'paclitaxel', 'cyclophosphamide'].includes(k)) ? 20 : STP.COOLING.scalp.post;
     return {options: Array.from(set), blocked, defaults: {scalp: {pre: STP.COOLING.scalp.pre, post: scalpPost}, glove: {pre: STP.COOLING.glove.pre, post: STP.COOLING.glove.post}, oral: {pre: STP.COOLING.oral.pre, post: STP.COOLING.oral.post}}};
@@ -1787,12 +2417,12 @@ details.more > summary { cursor: pointer; font-weight: 500; color: var(--teal); 
     return {schema: 'alkady-stp-record/1', createdAt: new Date().toISOString(), patientCode: STP.westernDigits(order.patient.code || ''), initials: order.patient.initials || '',
       regimenId: order.regimen.id, regimen: order.regimen.name, phase: order.phase.label, cycle: order.cycle, day1: order.opts.startDate || '', nextCycle: order.schedule.next || '',
       bsa_m2: order.bsa == null ? null : STP.round(order.bsa, 2), level: order.level, status: order.status,
-      doses: order.active.map(r => ({drug: r.generic, dose: r.doseText, pct: r.pct, days: r.daysText})), roomHours: tl ? tl.hours : null,
+      doses: order.active.map(r => ({drug: r.generic, proto: r.protoText, dose: r.doseText, source: r.giveSource, pct: r.pctGiven != null ? r.pctGiven : r.pct, days: r.daysText})), roomHours: tl ? tl.hours : null,
       verification: extra.verified ? 'verified' : 'pending', links: extra.links || {}, signatures: extra.signatures || []};
   };
   STP.recordText = function (rec) {
     const L = ['Systemic therapy protocol — ' + rec.regimen + (rec.phase && rec.phase !== rec.regimen ? ' (' + rec.phase + ')' : ''), 'Cycle ' + rec.cycle + (rec.day1 ? ', day 1 on ' + STP.fmtDate(rec.day1) : '') + (rec.nextCycle ? '; next cycle ' + STP.fmtDate(rec.nextCycle) : ''),
-      'BSA ' + (rec.bsa_m2 == null ? 'not calculated' : Number(rec.bsa_m2).toFixed(2) + ' m²') + (rec.level ? '; dose level −' + rec.level : ''), rec.doses.map(d => d.drug + ' ' + d.dose + (d.pct !== 100 ? ' (' + d.pct + '%)' : '') + (d.days ? ', day ' + d.days : '')).join('; ')];
+      'BSA ' + (rec.bsa_m2 == null ? 'not calculated' : Number(rec.bsa_m2).toFixed(2) + ' m²') + (rec.level ? '; dose level −' + rec.level : ''), rec.doses.map(d => d.drug + ' ' + (d.proto ? d.proto + ': ' : '') + (d.dose ? d.dose + (d.source === 'typed' ? ' typed' : '') + (d.pct !== 100 ? ' (' + d.pct + '%)' : '') : 'total dose written by hand') + (d.days ? ', day ' + d.days : '')).join('; ')];
     if (rec.roomHours != null) L.push('Single-room time ' + rec.roomHours + ' h');
     Object.keys(rec.links || {}).forEach(k => { if (rec.links[k]) L.push(k + ': ' + rec.links[k]); });
     L.push('Regimen check: ' + rec.verification);
@@ -1839,14 +2469,21 @@ details.more > summary { cursor: pointer; font-weight: 500; color: var(--teal); 
     const verified = !!(x.verified && x.verified.clin && x.verified.pharm);
     const code = STP.westernDigits(pt.code || ''), who = [pt.initials, code ? 'file ' + code : ''].filter(Boolean).join(' · ') || 'patient not named';
     const cyclesText = ph.cycles ? o.cycle + ' of ' + ph.cycles : String(o.cycle), levelText = o.level ? 'Reduced: dose level −' + o.level : (reg.escalated ? 'Escalated regimen, standard dose' : 'Standard');
+    const subText = x.subtype || (STP.subsOf ? STP.subsOf(reg).join('; ') : reg.sub);
+    /* the three dose spaces of every order line: per m² (or per kg, AUC, fixed), the calculated guide, and the total dose to give */
+    const perCell = r => r.protoText + (r.adjText ? ' (' + r.adjText + ')' : '');
+    const calcFull = r => r.calc == null ? r.calcText : r.calcText + (r.tablets ? ' (' + r.tablets + ')' : '') + (r.perDayAmount != null ? ' in total (' + fmt(STP.roundDose(r.perDayAmount * r.pct / 100, r.key, r.outUnit).value) + ' ' + r.outUnit + ' per 24 h)' : '') + (r.capNote ? ' — ' + r.capNote : '');
+    const giveCell = r => (r.giveSource === 'typed' ? r.doseText : r.giveSource === 'calc' ? calcFull(r) : r.giveText) + (r.freq ? ' ' + r.freq : '');
+    const guideCell = r => r.giveSource === 'hand' && r.totalMode === 'handonly' ? (r.how ? r.calcLine : 'fixed dose') : (r.calc == null ? r.calcText : (r.how || r.pct !== 100 ? r.calcLine + ' = ' + calcFull(r) : 'fixed dose'));
+    const byHand = o.active.some(r => r.giveSource === 'hand');
     const title = {type: 'title', text: 'Systemic Therapy Protocol', sub: reg.name + (reg.phases.length > 1 ? ' — ' + ph.label : ''), right: who, draft: !verified};
     blocks.push(title);
     blocks.push({type: 'kv', title: 'Patient', cols: 4, items: [['File number', code || '—'], ['Initials', pt.initials || '—'], ['Age / sex', (pt.age ? fmt(STP.num(pt.age), 0) + ' y' : '—') + ' / ' + (pt.sex === 'F' ? 'female' : pt.sex === 'M' ? 'male' : '—')], ['ECOG', pt.ecog == null || pt.ecog === '' ? '—' : String(pt.ecog)],
       ['Weight', pt.weight ? fmt(STP.num(pt.weight), 1) + ' kg' : '—'], ['Height', pt.height ? fmt(STP.num(pt.height), 0) + ' cm' : '—'], ['Body surface area', o.bsa == null ? 'not calculated' : o.bsa.toFixed(2) + ' m² (' + STP.BSA_NAMES[o.bsaFormula] + (o.bsaCapped ? ', capped' : '') + ')'], ['Allergies', pt.allergies || 'none recorded'],
-      ['Diagnosis', pt.diagnosis || reg.sub, 2], ['Stage / setting', (pt.stage ? pt.stage + ' — ' : '') + reg.intent, 2]]});
-    blocks.push({type: 'kv', title: 'Regimen', cols: 4, items: [['Tumor site', o.site.name], ['Subtype', reg.sub], ['Therapy class', reg.cls.map(c => ({chemo: 'chemotherapy', immuno: 'immunotherapy', targeted: 'targeted therapy', hormone: 'hormonal therapy'}[c])).join(' + ')], ['Biomarker', reg.biomarker || '—'],
+      ['Diagnosis', pt.diagnosis || subText, 2], ['Stage / setting', (pt.stage ? pt.stage + ' — ' : '') + reg.intent + (reg.detail ? ' (' + reg.detail + ')' : ''), 2]]});
+    blocks.push({type: 'kv', title: 'Regimen', cols: 4, items: [['Tumor site', o.site.name], ['Subtype', subText], ['Therapy class', reg.cls.map(c => ({chemo: 'chemotherapy', immuno: 'immunotherapy', targeted: 'targeted therapy', hormone: 'hormonal therapy'}[c])).join(' + ')], ['Biomarker', reg.biomarker || '—'],
       ['Cycle', cyclesText + (ph.until ? ' (' + ph.until + ')' : '')], ['Cycle length', ph.cycleDays + ' days; treatment day ' + STP.daysText(o.days)], ['Day 1', o.schedule.dates.length ? STP.fmtDate(o.schedule.dates[0]) : '—'], ['Next cycle due', o.schedule.next ? STP.fmtDate(o.schedule.next) : '—'],
-      ['Dose intensity', levelText], ['Emetic risk (day ' + o.day + ')', STP.EMET_NAMES[o.risk] || o.risk], ['Single-room time', tl ? tl.hoursText + ' (' + tl.start + '–' + tl.end + ')' : '—'], ['Source check', STP.CHECK_NAMES[o.check.status]]]});
+      ['Dose intensity', levelText], ['Emetic risk (day ' + o.day + ')', STP.emetName(o.risk)], ['Single-room time', tl ? tl.hoursText + ' (' + tl.start + '–' + tl.end + ')' : '—'], ['Source check', STP.CHECK_NAMES[o.check.status]]]});
     blocks.push({type: 'status', tone: STATUS_TONE[o.status], text: STP.STATUS_TEXT[o.status], detail: o.missing.join(' ')});
 
     /* start criteria and labs */
@@ -1862,16 +2499,17 @@ details.more > summary { cursor: pointer; font-weight: 500; color: var(--teal); 
     /* the order */
     const rows = [];
     o.active.forEach((r, i) => {
-      const dose = r.final == null ? r.doseText : r.doseText + (r.freq ? ' ' + r.freq : '') + (r.tablets ? ' (' + r.tablets + ')' : '') + (r.perDayAmount != null ? ' in total (' + fmt(STP.roundDose(r.perDayAmount * r.pct / 100, r.key, r.outUnit).value) + ' ' + r.outUnit + ' per 24 h)' : '') + (r.capNote ? ' — ' + r.capNote : '');
-      rows.push({cells: [String(i + 1), r.name + (r.optional ? ' (optional item)' : ''), r.protoText, r.how || '—', r.pct + '%', dose, r.admin, r.every || ('Day ' + r.daysText)], tone: TONE[r.status] === 'ok' ? '' : (r.status === 'ok' ? '' : TONE[r.status]), strongCol: 5});
+      rows.push({cells: [String(i + 1), r.name + (r.optional ? ' (optional item)' : ''), perCell(r), guideCell(r), (r.pctGiven != null ? r.pctGiven : r.pct) + '%', giveCell(r), r.admin, r.every || ('Day ' + r.daysText)], tone: TONE[r.status] === 'ok' ? '' : (r.status === 'ok' ? '' : TONE[r.status]), strongCol: 5});
       const extra = [];
+      if (r.giveSource === 'typed') extra.push('Total dose typed by the prescriber: ' + r.doseText + (r.pctGiven != null ? ' = ' + r.pctGiven + '% of the protocol dose' : '') + (r.perGiven ? ' (' + r.perGiven + ')' : '') + '.');
       if (r.levelNote) extra.push(r.levelNote);
       if (r.pctOverride != null) extra.push('Dose percentage set by the prescriber: ' + r.pctOverride + '%.');
       r.alerts.forEach(a => extra.push(ACT_WORD[a.act] + ': ' + a.why + ' [' + a.src + ']'));
       if (r.note) extra.push(r.note);
       if (extra.length) rows.push({span: extra.join(' • '), tone: r.alerts.length ? (TONE[r.status] || 'info') : 'info'});
     });
-    blocks.push({type: 'table', title: 'Systemic therapy order — cycle ' + o.cycle + ', ' + ph.label, widths: [4, 15, 10, 13, 5, 15, 27, 11], head: ['#', 'Drug', 'Protocol dose', 'Calculation', '%', 'Dose to give', 'Route and administration', 'Days'], rows, emphasis: true});
+    blocks.push({type: 'table', title: 'Systemic therapy order — cycle ' + o.cycle + ', ' + ph.label, widths: [4, 15, 12, 15, 5, 14, 24, 11], head: ['#', 'Drug', 'Dose per m² / kg', o.totalMode === 'calc' ? 'Calculation' : 'Calculated guide', '%', 'Total dose to give', 'Route and administration', 'Days'], rows, emphasis: true});
+    if (byHand) blocks.push({type: 'list', small: true, items: ['Total dose: the prescriber writes each dose in the empty space' + (o.totalMode === 'handonly' ? '.' : '. The calculated dose is a guide from the protocol dose, the body surface area or weight, and the percentage shown.')]});
     const cautions = STP.regimenCautions(o);
     if (cautions.length) blocks.push({type: 'list', title: 'Cautions for this treatment day', items: cautions, tone: 'warn'});
 
@@ -1914,27 +2552,28 @@ details.more > summary { cursor: pointer; font-weight: 500; color: var(--teal); 
 
     /* order table, vertical layout: one line per step of the day, in the order given */
     const steps = [];
-    o.pre.forEach(m => steps.push({cells: ['', 'Pre-medication', m.t, '', '', '', '']}));
-    o.today.forEach(r => { if (r.hyd && r.hyd.pre) steps.push({cells: ['', 'Hydration', 'Pre-hydration for ' + r.generic + ' (' + r.hyd.pre + ' min)', '', 'IV', '', '']});
-      steps.push({cells: ['', r.role, r.name, r.final == null ? r.doseText : r.doseText + (r.freq ? ' ' + r.freq : ''), r.route, r.admin + (r.route === 'IV' && !r.pump ? ' — planned ' + (o.cycle === 1 ? r.minutes1 : r.minutes) + ' min' : ''), ''], strongCol: 3});
-      if (r.hyd && r.hyd.post) steps.push({cells: ['', 'Hydration', 'Post-hydration for ' + r.generic + ' (' + r.hyd.post + ' min)', '', 'IV', '', '']}); });
-    o.post.forEach(m => steps.push({cells: ['', 'After treatment', m.t, '', '', '', '']}));
-    steps.push({cells: ['', 'After treatment', o.gcsf.t, '', '', '', '']});
+    const routeAdmin = r => (new RegExp('^(' + r.route + '\\b|orally|subcutaneous|intramuscular|deep subcutaneous)', 'i').test(r.admin) ? '' : r.route + ': ') + r.admin;
+    o.pre.forEach(m => steps.push({cells: ['', 'Before', m.t, '', '', '', '']}));
+    o.today.forEach(r => { if (r.hyd && r.hyd.pre) steps.push({cells: ['', 'Hydration', 'Pre-hydration for ' + r.generic + ' (' + r.hyd.pre + ' min)', '', '', 'IV', '']});
+      steps.push({cells: ['', 'Treatment', r.name, perCell(r), giveCell(r), routeAdmin(r) + (r.route === 'IV' && !r.pump && (o.cycle === 1 ? r.minutes1 : r.minutes) != null ? ' — planned ' + (o.cycle === 1 ? r.minutes1 : r.minutes) + ' min' : ''), ''], strongCol: 4});
+      if (r.hyd && r.hyd.post) steps.push({cells: ['', 'Hydration', 'Post-hydration for ' + r.generic + ' (' + r.hyd.post + ' min)', '', '', 'IV', '']}); });
+    o.post.forEach(m => steps.push({cells: ['', 'After', m.t, '', '', '', '']}));
+    steps.push({cells: ['', 'After', o.gcsf.t, '', '', '', '']});
     steps.forEach((s, i) => { s.cells[0] = String(i + 1); });
     blocks.push({type: 'pagebreak'});
     blocks.push({type: 'title', text: 'Treatment order — vertical layout', sub: reg.name + ' — cycle ' + o.cycle + ', day ' + o.day + (o.schedule.dates.length ? ' (' + STP.fmtDate(o.schedule.dates[o.days.indexOf(o.day)] || '') + ')' : ''), right: who, draft: !verified, minor: true});
-    blocks.push({type: 'table', title: 'Give in this order', widths: [4, 13, 35, 14, 6, 18, 10], head: ['#', 'Step', 'Medication', 'Dose', 'Route', 'Administration', 'Time and initials'], rows: steps, tall: true});
+    blocks.push({type: 'table', title: 'Give in this order', widths: [4, 9, 31, 11, 13, 21, 11], head: ['#', 'Step', 'Medication', 'Dose per m² / kg', 'Total dose', 'Route and administration', 'Time and initials'], rows: steps, tall: true});
     blocks.push({type: 'sign', title: 'Checked and given by', people: staff.filter(s => /nurse|pharmacist/i.test(s.role)).length ? staff.filter(s => /nurse|pharmacist/i.test(s.role)) : staff.slice(0, 2), compactSign: true});
 
     /* order table, horizontal layout: drugs down, treatment days across */
-    const dcols = o.days.slice(0, 12), wDay = Math.max(5, Math.floor(52 / Math.max(1, dcols.length)));
-    const head = ['Drug', 'Dose', 'Route'].concat(dcols.map((d, i) => 'Day ' + d + (o.schedule.dates[i] ? ' ' + STP.fmtDate(o.schedule.dates[i]).slice(0, 6) : '')));
-    const grid = o.active.map(r => ({cells: [r.name, r.final == null ? r.doseText : r.doseText + (r.freq ? ' ' + r.freq : ''), r.route].concat(dcols.map(d => r.days.includes(d) ? '☐' : '—'))}));
-    grid.push({cells: ['Pre-medication given', '', ''].concat(dcols.map(() => '☐'))});
-    grid.push({cells: ['Nurse initials and time', '', ''].concat(dcols.map(() => ''))});
+    const dcols = o.days.slice(0, 12), wDay = Math.max(4, Math.floor(48 / Math.max(1, dcols.length)));
+    const head = ['Drug', 'Dose per m² / kg', 'Total dose', 'Route'].concat(dcols.map((d, i) => 'Day ' + d + (o.schedule.dates[i] ? ' ' + STP.fmtDate(o.schedule.dates[i]).slice(0, 6) : '')));
+    const grid = o.active.map(r => ({cells: [r.name, perCell(r), giveCell(r), r.route].concat(dcols.map(d => r.days.includes(d) ? '☐' : '—'))}));
+    grid.push({cells: ['Pre-medication given', '', '', ''].concat(dcols.map(() => '☐'))});
+    grid.push({cells: ['Nurse initials and time', '', '', ''].concat(dcols.map(() => ''))});
     blocks.push({type: 'pagebreak', landscape: true});
     blocks.push({type: 'title', text: 'Treatment order — horizontal layout', sub: reg.name + ' — cycle ' + o.cycle + ' administration record', right: who, draft: !verified, minor: true});
-    blocks.push({type: 'table', title: 'Administration record for the cycle (tick each dose when given)', widths: [22, 18, 8].concat(dcols.map(() => wDay)), head, rows: grid, tall: true, center: 3});
+    blocks.push({type: 'table', title: 'Administration record for the cycle (tick each dose when given)', widths: [20, 12, 12, 8].concat(dcols.map(() => wDay)), head, rows: grid, tall: true, center: 4});
     if (o.days.length > dcols.length) blocks.push({type: 'list', small: true, items: ['Daily oral treatment continues beyond the days shown: day ' + STP.daysText(o.days) + '.']});
     blocks.push({type: 'credit', lines: [B.credit[0]], copyright: B.copyright, status: verified ? '' : B.draft});
 
@@ -2700,8 +3339,8 @@ details.more > summary { cursor: pointer; font-weight: 500; color: var(--teal); 
   const A = STP.app = {views: {}, ui: {open: {}, scroll: {}, part: 'all', sigDropped: false}, C: {}};
 
   const CLS = {chemo: 'Chemotherapy', immuno: 'Immunotherapy', targeted: 'Targeted therapy', hormone: 'Hormonal therapy'};
-  const CHECK_TONE = {match: 'ok', partial: 'warn', conflict: 'crit', none: 'info'};
-  const CHECK_SHORT = {match: 'Source matched', partial: 'Differences to settle', conflict: 'Sources disagree', none: 'Not yet checked'};
+  const CHECK_TONE = {match: 'ok', partial: 'warn', conflict: 'crit', none: 'info', trial: 'info', copy: 'info', own: 'info'};
+  const CHECK_SHORT = {match: 'Source matched', partial: 'Differences to settle', conflict: 'Sources disagree', none: 'Not yet checked', trial: 'From a trial record', copy: 'Copied doses', own: 'Clinic protocol'};
   const STAGE = {early: 'Early stage', late: 'Advanced stage', both: 'Early and advanced'};
   const ECOG = [['', 'Not recorded'], ['0', '0 — fully active'], ['1', '1 — restricted in strenuous activity'], ['2', '2 — up more than half the day, no work'], ['3', '3 — in bed or chair more than half the day'], ['4', '4 — fully dependent']];
   A.CLS = CLS; A.CHECK_TONE = CHECK_TONE; A.CHECK_SHORT = CHECK_SHORT;
@@ -2709,12 +3348,12 @@ details.more > summary { cursor: pointer; font-weight: 500; color: var(--teal); 
   /* ---------- state ---------- */
   const blankPatient = () => ({pt: {code: '', initials: '', age: '', sex: '', weight: '', height: '', ecog: '', diagnosis: '', stage: '', allergies: '', folder: ''},
     lab: {date: STP.todayISO(), wbc: '', anc: '', hb: '', plt: '', bili: '', biliUnit: 'mg', ast: '', alt: '', alp: '', cr: '', crUnit: 'mg', lvef: '', lvefBase: '', qtc: ''},
-    cycle: '1', day: null, startDate: STP.todayISO(), level: 0, pct: {}, include: {},
+    cycle: '1', day: null, startDate: STP.todayISO(), level: 0, pct: {}, include: {}, total: {},
     cond: {tox: '', frail: false, priorFN: false, toxicity: {}}, comeds: [], comedQ: '', comedOther: '',
     time: {start: '09:00', arrival: '', premed: '', flush: '', discharge: '', cooling: {}}, sigs: {},
     drive: {busy: false, step: '', result: null, error: ''}});
-  const defaultCfg = () => ({staff: STP.STAFF_ROLES.map(r => ({role: r, name: ''})), letterhead: true, bsaFormula: 'mosteller', bsaCap: '', uln: {bili: '1.2', ast: '40', alt: '40', alp: '120'}, convert: false, verified: {}, theme: 'auto', gClientId: ''});
-  const st = A.st = Object.assign(blankPatient(), {pick: {group: '', site: '', stage: 'all', cls: 'all', q: ''}, regimenId: '', phaseIndex: 0,
+  const defaultCfg = () => ({staff: STP.STAFF_ROLES.map(r => ({role: r, name: ''})), letterhead: true, bsaFormula: 'mosteller', bsaCap: '', uln: {bili: '1.2', ast: '40', alt: '40', alp: '120'}, convert: false, verified: {}, theme: 'auto', gClientId: '', totalMode: 'hand'});
+  const st = A.st = Object.assign(blankPatient(), {pick: {group: '', site: '', sub: '', stage: 'all', cls: 'all', q: ''}, regimenId: '', subtype: '', phaseIndex: 0,
     meds: {nk1: 'aprepitant', ht3: 'palonosetron', olanzapine: true, gcsf: 'auto'}, cfg: defaultCfg()});
   A.blankPatient = blankPatient;
 
@@ -2736,6 +3375,7 @@ details.more > summary { cursor: pointer; font-weight: 500; color: var(--teal); 
       if (c.uln && typeof c.uln === 'object') Object.keys(d.uln).forEach(k => { if (typeof c.uln[k] === 'string') d.uln[k] = c.uln[k].slice(0, 8); });
       if (c.verified && typeof c.verified === 'object') Object.keys(c.verified).forEach(id => { const v = c.verified[id]; if (STP.regimenById(id) && v && typeof v.clin === 'string' && typeof v.pharm === 'string') d.verified[id] = {clin: v.clin.slice(0, 80), pharm: v.pharm.slice(0, 80), date: String(v.date || ''), data: String(v.data || '')}; });
       if (['auto', 'light', 'dark'].includes(c.theme)) d.theme = c.theme;
+      if (STP.TOTAL_MODES[c.totalMode]) d.totalMode = c.totalMode;
     }
     d.gClientId = String(STP.store.get('gClientId', '') || '');
     st.cfg = d;
@@ -2757,16 +3397,21 @@ details.more > summary { cursor: pointer; font-weight: 500; color: var(--teal); 
     return true;
   };
   A.newPatient = function () { Object.assign(st, blankPatient()); };
-  A.chooseRegimen = function (id) {
-    if (!STP.regimenById(id)) return false;
-    st.regimenId = id; st.phaseIndex = 0; st.cycle = '1'; st.day = null; st.level = 0; st.pct = {}; st.include = {};
+  /* the subtype under which the regimen was chosen; empty when the regimen has several and none was chosen */
+  A.subtypeFor = function (reg) { const subs = STP.subsOf(reg); return subs.includes(st.subtype) ? st.subtype : (subs.length === 1 ? subs[0] : ''); };
+  A.chooseRegimen = function (id, sub) {
+    const reg = STP.regimenById(id); if (!reg) return false;
+    const subs = STP.subsOf(reg);
+    st.subtype = subs.includes(sub) ? sub : subs.includes(st.subtype) ? st.subtype : subs.includes(st.pick.sub) ? st.pick.sub : (subs.length === 1 ? subs[0] : '');
+    st.regimenId = id; st.phaseIndex = 0; st.cycle = '1'; st.day = null; st.level = 0; st.pct = {}; st.include = {}; st.total = {};
     st.drive = {busy: false, step: '', result: null, error: ''};
     return true;
   };
   /* what has to follow when one value changes */
   A.afterSet = function (path) {
-    if (path === 'pick.group') st.pick.site = '';
-    if (path === 'phaseIndex') { st.cycle = '1'; st.day = null; st.level = 0; st.pct = {}; st.include = {}; }
+    if (path === 'pick.group') { st.pick.site = ''; st.pick.sub = ''; }
+    if (path === 'pick.site') st.pick.sub = '';
+    if (path === 'phaseIndex') { st.cycle = '1'; st.day = null; st.level = 0; st.pct = {}; st.include = {}; st.total = {}; }
     if (path === 'day') st.day = num(st.day);
     if (path.indexOf('cfg.') === 0) A.saveCfg();
   };
@@ -2787,7 +3432,7 @@ details.more > summary { cursor: pointer; font-weight: 500; color: var(--teal); 
     C.uln = uln; C.L = STP.labs(st.lab, uln, st.pt); C.bsa = STP.bsa(st.pt.weight, st.pt.height, cfg.bsaFormula);
     if (!st.regimenId || !STP.regimenById(st.regimenId)) { st.sigs = {}; return C; }
     const inp = {regimenId: st.regimenId, phaseIndex: Number(st.phaseIndex) || 0, cycle: st.cycle, day: num(st.day), patient: Object.assign({}, st.pt), lab: st.lab, uln,
-      opts: {bsaFormula: cfg.bsaFormula, bsaCap: cfg.bsaCap, level: st.level, pct: st.pct, include: st.include, nk1: st.meds.nk1, ht3: st.meds.ht3, olanzapine: !!st.meds.olanzapine, gcsf: st.meds.gcsf === 'auto' ? null : st.meds.gcsf, priorFN: !!st.cond.priorFN, startDate: st.startDate}};
+      opts: {bsaFormula: cfg.bsaFormula, bsaCap: cfg.bsaCap, level: st.level, pct: st.pct, include: st.include, nk1: st.meds.nk1, ht3: st.meds.ht3, olanzapine: !!st.meds.olanzapine, gcsf: st.meds.gcsf === 'auto' ? null : st.meds.gcsf, priorFN: !!st.cond.priorFN, startDate: st.startDate, total: st.total, totalMode: cfg.totalMode}};
     let order = STP.buildOrder(inp);
     /* the visit shown first is the first day on which something is given in the clinic */
     const visits = A.visitDays(order); if (!visits.includes(order.day)) { inp.day = visits[0]; order = STP.buildOrder(inp); }
@@ -2805,7 +3450,7 @@ details.more > summary { cursor: pointer; font-weight: 500; color: var(--teal); 
     const tox = {}; Object.keys(st.cond.toxicity || {}).forEach(i => { const name = STP.TOX_ITEMS[i], g = st.cond.toxicity[i]; if (name && g !== '' && g != null) tox[name] = g; });
     C.comedNames = st.comeds.map(k => (STP.COMEDS.find(c => c.k === k) || {}).n).filter(Boolean).concat(st.comedOther.trim() ? ['Other, not screened: ' + st.comedOther.trim()] : []);
     C.docX = {staff: C.staff, ddi: C.ddi, comeds: C.comedNames, intensity: C.inten, cooling: Object.keys(cooling).filter(k => cooling[k].on).map(k => ({name: STP.COOLING[k].name, pre: cooling[k].pre, post: cooling[k].post})),
-      letterhead: cfg.letterhead !== false, verified: C.verified ? {clin: C.verified.clin, pharm: C.verified.pharm} : null, toxicity: tox};
+      subtype: A.subtypeFor(order.regimen), letterhead: cfg.letterhead !== false, verified: C.verified ? {clin: C.verified.clin, pharm: C.verified.pharm} : null, toxicity: tox};
     C.doc = STP.buildDoc(order, C.tl, C.docX);
     /* text the PDF cannot print: its built-in fonts hold Latin letters only */
     const typed = {'the diagnosis': st.pt.diagnosis, 'the stage': st.pt.stage, 'the allergies': st.pt.allergies, 'the initials': st.pt.initials, 'the other medicines': st.comedOther, 'a staff name or role': cfg.staff.map(s => s.role + ' ' + s.name).join(' ')};
@@ -2863,7 +3508,7 @@ details.more > summary { cursor: pointer; font-weight: 500; color: var(--teal); 
       (STP.ibw(p.height, p.sex) != null ? box(fmt(STP.ibw(p.height, p.sex), 1), 'Ideal body weight, kg · Devine', '') : '');
   }
   V['card-patient'] = function () {
-    return head('1', 'Patient and measurements', '<button type="button" class="btn sm" data-act="paste">Paste from OncoFile</button><button type="button" class="btn sm" data-act="new-patient">New patient</button>') +
+    return head('1', 'Patient and measurements', '<button type="button" class="btn sm" data-act="import" data-arg="patient">Take the patient from OncoFile</button><button type="button" class="btn sm" data-act="new-patient">New patient</button>') +
       '<div class="body"><div class="fields">' + A.field('File number', 'pt.code', {mode: 'numeric', max: 24}) + A.field('Initials', 'pt.initials', {caps: 'characters', max: 12}) + A.field('Age (years)', 'pt.age', {mode: 'decimal', max: 5}) +
       '<div class="fld"><span class="lbl">Sex</span>' + A.seg('Sex', 'pt.sex', [['F', 'Female'], ['M', 'Male']]) + '</div>' +
       A.field('Weight (kg)', 'pt.weight', {mode: 'decimal', max: 6}) + A.field('Height (cm)', 'pt.height', {mode: 'decimal', max: 6}) + '</div>' +
@@ -2898,41 +3543,61 @@ details.more > summary { cursor: pointer; font-weight: 500; color: var(--teal); 
   /* ---------- 3 regimen ---------- */
   A.filtered = function () {
     const k = st.pick, words = String(k.q || '').trim().toLowerCase().split(/\s+/).filter(Boolean);
-    const list = STP.REGIMENS.filter(r => {
+    const list = (STP.IMPORTED || []).concat(STP.REGIMENS).filter(r => {
       const site = STP.SITES[r.site];
       if (k.group && site.group !== k.group) return false;
       if (k.site && r.site !== k.site) return false;
+      if (k.site && k.sub && !STP.subsOf(r).includes(k.sub)) return false;
       if (k.stage !== 'all' && r.stage !== 'both' && r.stage !== k.stage) return false;
       if (k.cls !== 'all' && !r.cls.includes(k.cls)) return false;
-      if (words.length) { const hay = [r.name, r.sub, r.intent, r.biomarker || '', site.name, site.group].concat(r.phases.map(p => p.items.map(it => (STP.DRUGS[it.drug] || {}).name || '').join(' '))).join(' ').toLowerCase(); if (!words.every(w => hay.includes(w))) return false; }
+      if (words.length) { const hay = [r.name, r.sub, r.detail || '', r.intent, r.biomarker || '', site.name, site.group].concat(r.phases.map(p => p.items.map(it => (STP.DRUGS[it.drug] || {}).name || '').join(' '))).join(' ').toLowerCase(); if (!words.every(w => hay.includes(w))) return false; }
       return true;
     });
-    const sites = Object.keys(STP.SITES), subs = {};
-    STP.REGIMENS.forEach((r, i) => { const key = r.site + '|' + r.sub; if (subs[key] == null) subs[key] = i; });
-    return list.sort((a, b) => sites.indexOf(a.site) - sites.indexOf(b.site) || subs[a.site + '|' + a.sub] - subs[b.site + '|' + b.sub]);
+    const sites = Object.keys(STP.SITES), ord = (STP.IMPORTED || []).concat(STP.REGIMENS), si = x => x === 'oncofile' ? -1 : sites.indexOf(x);
+    return list.sort((a, b) => si(a.site) - si(b.site) || ord.indexOf(a) - ord.indexOf(b));
   };
+  /* the same list by tumor subtype: a regimen is shown under each subtype it is an option for */
+  A.grouped = function () {
+    const out = [], k = st.pick;
+    A.filtered().forEach(r => STP.subsOf(r).forEach(sub => {
+      if (k.site && k.sub && sub !== k.sub) return;
+      let g = out.find(x => x.site === r.site && x.sub === sub); if (!g) { g = {site: r.site, sub, list: []}; out.push(g); }
+      g.list.push(r);
+    }));
+    const sites = Object.keys(STP.SITES), si = x => x === 'oncofile' ? -1 : sites.indexOf(x), ui = g => { const i = (STP.SUBTYPES[g.site] || []).indexOf(g.sub); return i < 0 ? 99 : i; };
+    return out.sort((a, b) => si(a.site) - si(b.site) || ui(a) - ui(b));
+  };
+  function subSelect() {
+    const k = st.pick, list = k.site ? (STP.SUBTYPES[k.site] || []) : [];
+    if (list.length < 2) return '';
+    return A.select('Tumor subtype', 'pick.sub', [['', 'All subtypes']].concat(list.map(x => [x, x + ' (' + STP.optionsFor(k.site, x).length + ')'])), {rerender: true});
+  }
   function regList() {
-    const list = A.filtered(); if (!list.length) return '<p class="hint">No regimen in the library matches these filters.</p>';
-    let h = '', site = '', sub = '';
-    list.forEach(r => {
-      if (r.site !== site) { site = r.site; sub = ''; h += '<h3 class="sub">' + e(STP.SITES[site].name) + '</h3>'; }
-      if (r.sub !== sub) { sub = r.sub; h += '<p class="hint"><b>' + e(sub) + '</b></p>'; }
-      const ck = STP.checkOf(r.id);
-      h += '<button type="button" class="reg" data-act="pick" data-arg="' + e(r.id) + '" aria-pressed="' + (r.id === st.regimenId) + '"><b>' + e(r.name) + '</b><span>' + e(r.intent) + '</span><span class="row">' + r.cls.map(c => chip(CLS[c], 'teal')).join('') + chip(STAGE[r.stage]) +
-        (r.escalated ? chip('Escalated', 'warn') : '') + (r.reduced ? chip('Lower intensity', 'info') : '') + chip(CHECK_SHORT[ck.status], CHECK_TONE[ck.status]) + '</span></button>';
+    const groups = A.grouped(); if (!groups.length) return '<p class="hint">No regimen in the library matches these filters.</p>';
+    let h = '', site = '';
+    groups.forEach(g => {
+      if (g.site !== site) { site = g.site; h += '<h3 class="sub">' + e(STP.SITES[site].name) + '</h3>'; }
+      h += '<p class="hint subhead"><b>' + e(g.sub) + '</b> · ' + g.list.length + (g.list.length === 1 ? ' option' : ' options') + '</p>';
+      g.list.forEach(r => {
+        const ck = STP.checkOf(r.id), on = r.id === st.regimenId && (STP.subsOf(r).length === 1 || !st.subtype || st.subtype === g.sub);
+        h += '<button type="button" class="reg" data-act="pick" data-arg="' + e(r.id) + '" data-sub="' + e(g.sub) + '" aria-pressed="' + on + '"><b>' + e(r.name) + '</b><span>' + e([r.intent, r.detail && r.detail !== g.sub ? r.detail : ''].filter(Boolean).join(' · ')) + '</span><span class="row">' + r.cls.map(c => chip(CLS[c], 'teal')).join('') + chip(STAGE[r.stage]) +
+          (r.escalated ? chip('Escalated', 'warn') : '') + (r.reduced ? chip('Lower intensity', 'info') : '') + chip(CHECK_SHORT[ck.status], CHECK_TONE[ck.status]) + '</span></button>' +
+          (r.imported ? '<button type="button" class="btn sm link" data-act="import-del" data-arg="' + e(r.id) + '">Remove this imported protocol</button>' : '');
+      });
     });
     return h;
   }
   V['card-regimen'] = function () {
-    const k = st.pick, count = id => STP.REGIMENS.filter(r => r.site === id).length;
+    const k = st.pick, count = id => (STP.IMPORTED || []).concat(STP.REGIMENS).filter(r => r.site === id).length;
     const sites = Object.keys(STP.SITES).filter(id => !k.group || STP.SITES[id].group === k.group);
     const pill = (path, val, label) => '<button type="button" data-act="set" data-path="' + path + '" data-val="' + val + '" aria-pressed="' + (A.get(path) === val) + '">' + e(label) + '</button>';
-    return head('3', 'Regimen', chip(Object.keys(STP.SITES).length + ' tumor sites · ' + STP.REGIMENS.length + ' regimens')) + '<div class="body"><div class="fields wide">' +
+    return head('3', 'Regimen', chip(Object.keys(STP.SUBTYPES).filter(x => x !== 'oncofile').length + ' tumor sites · ' + STP.REGIMENS.length + ' regimens') + '<button type="button" class="btn sm" data-act="import" data-arg="protocol">Import a protocol from OncoFile</button>') + '<div class="body"><div class="fields wide">' +
       A.select('Tumor group', 'pick.group', [['', 'All groups']].concat(STP.GROUPS.map(g => [g, g])), {rerender: true}) +
-      A.select('Tumor site (NCCN guideline)', 'pick.site', [['', 'All sites' + (k.group ? ' in this group' : '')]].concat(sites.map(id => [id, STP.SITES[id].name + ' (' + count(id) + ')'])), {rerender: true}) + '</div>' +
+      A.select('Tumor site (NCCN guideline)', 'pick.site', [['', 'All sites' + (k.group ? ' in this group' : '')]].concat(sites.map(id => [id, STP.SITES[id].name + ' (' + count(id) + ')'])), {rerender: true}) + subSelect() + '</div>' +
       '<div class="fld"><span class="lbl">Stage</span><div class="filters" role="group" aria-label="Stage">' + pill('pick.stage', 'all', 'Any stage') + pill('pick.stage', 'early', 'Early') + pill('pick.stage', 'late', 'Advanced') + '</div></div>' +
       '<div class="fld"><span class="lbl">Type of treatment</span><div class="filters" role="group" aria-label="Type of treatment">' + pill('pick.cls', 'all', 'All') + Object.keys(CLS).map(c => pill('pick.cls', c, CLS[c])).join('') + '</div></div>' +
       A.field('Find by regimen, drug or biomarker', 'pick.q', {ph: 'for example FOLFOX, pembrolizumab, HER2', max: 40}) +
+      '<p class="hint">Every tumor subtype lists two or more options. A regimen that suits several subtypes appears under each of them.</p>' +
       '<div class="regs" data-scroll="regs" data-live="reglist">' + regList() + '</div></div>';
   };
 
@@ -2973,22 +3638,32 @@ details.more > summary { cursor: pointer; font-weight: 500; color: var(--teal); 
   }
   function rowParts(r) {
     const o = A.C.order, typed = st.pct[r.idx], bad = typed != null && String(typed).trim() !== '' && r.pctOverride == null;
-    const per24 = r.perDayAmount != null ? fmt(STP.roundDose(r.perDayAmount * r.pct / 100, r.key, r.outUnit).value) + ' ' + r.outUnit + ' per 24 h' : '';
+    const per24 = r.perDayAmount != null && r.giveSource !== 'typed' ? fmt(STP.roundDose(r.perDayAmount * r.pct / 100, r.key, r.outUnit).value) + ' ' + r.outUnit + ' per 24 h' : '';
+    const guide = r.calc == null ? r.calcText : (r.how || r.pct !== 100 ? r.calcLine + ' = ' : '') + r.calcText;
+    const showGuide = !(r.giveSource === 'hand' && o.totalMode === 'handonly');
+    const giveMain = r.giveSource === 'hand' ? '<span class="byhand">to write by hand</span>' : e(r.doseText);
+    const giveSmall = r.giveSource === 'typed' ? ['typed by the prescriber', r.pctGiven != null ? r.pctGiven + '% of the protocol dose' + (r.perGiven ? ' (' + r.perGiven + ')' : '') : '', r.freq]
+      : r.giveSource === 'calc' ? [r.freq, r.tablets, per24, r.capNote, r.pct !== 100 ? r.pct + '% of the protocol dose' : ''] : [r.freq, 'the order prints an empty space'];
     return {
-      calc: '<span class="lbl">Protocol dose</span><b>' + e(r.protoText) + '</b>' + e(r.how || ''),
-      give: '<span class="lbl">Dose to give</span><b>' + e(r.doseText) + '</b><small>' + e([r.freq, r.tablets, per24, r.capNote, r.pct !== 100 ? r.pct + '% of the protocol dose' : ''].filter(Boolean).join(' · ')) + '</small>',
+      calc: '<span class="lbl">' + (r.perBasis ? 'Dose per m² / kg' : 'Protocol dose') + '</span><b>' + e(r.protoText) + '</b>' + (r.adjText ? '<small>' + e(r.adjText) + '</small>' : '') +
+        (showGuide ? '<small>Calculated: ' + e(guide) + (r.giveSource !== 'calc' && r.tablets ? ' (' + e(r.tablets) + ')' : '') + '</small>' : ''),
+      give: '<span class="lbl">Total dose to give</span><b>' + giveMain + '</b><small>' + e(giveSmall.filter(Boolean).join(' · ')) + '</small>',
       alerts: (r.levelNote ? '<div class="alert">' + e(r.levelNote) + '</div>' : '') + (bad ? '<div class="alert hold">The dose % must be a number from 1 to 125. The typed value was ignored.</div>' : '') +
+        (r.typedBad ? '<div class="alert hold">The total dose must be a number above 0. The typed value was ignored.</div>' : '') +
         (r.pctOverride != null ? '<div class="alert ' + (r.pctOverride > 100 ? 'hold' : 'caution') + '">Dose percentage set by the prescriber: ' + r.pctOverride + '%.' + (r.pctOverride > 100 ? ' This is above the protocol dose: confirm that it is intended.' : '') + '</div>' : '') +
         r.alerts.map(a => '<div class="alert ' + e(a.act) + '"><b>' + e(STP.ACT_WORD[a.act] || a.act) + ':</b> ' + e(a.why) + ' <small>[' + e(a.src) + ']</small></div>').join('') + (!r.today && r.included ? '<div class="alert">Not given on day ' + o.day + ' of this visit.</div>' : '')
     };
   }
   function rowsHtml() {
-    return A.C.order.rows.map(r => {
-      const p = rowParts(r), auto = Math.min(r.pctLab, r.pctLevel != null ? r.pctLevel : 100);
+    const o = A.C.order;
+    return o.rows.map(r => {
+      const p = rowParts(r), auto = Math.min(r.pctLab, r.pctLevel != null ? r.pctLevel : 100), tv = st.total[r.idx], unit = r.outUnit || 'mg';
       return '<div class="dose ' + (r.included ? e(r.status) : '') + '"' + (r.included ? '' : ' style="opacity:.55"') + '><h4>' + e(r.name) + '<small>' + e(r.role) + ' · ' + e(r.every || 'day ' + r.daysText) + '</small>' +
         (r.optional ? A.check('Include this optional item', 'include.' + r.idx, {on: r.included, rerender: true}) : '') + '</h4>' +
         '<div class="calc" data-live="calc-' + r.idx + '">' + p.calc + '</div>' +
         '<div class="fld"><label for="f-pct.' + r.idx + '">Dose %</label><input class="inp sm" id="f-pct.' + r.idx + '" data-bind="pct.' + r.idx + '" type="text" inputmode="decimal" autocomplete="off" maxlength="5" placeholder="' + auto + '" value="' + e(st.pct[r.idx] == null ? '' : st.pct[r.idx]) + '"></div>' +
+        '<div class="fld total"><label for="f-total.' + r.idx + '">Total dose, ' + e(unit) + '</label><input class="inp sm" id="f-total.' + r.idx + '" data-bind="total.' + r.idx + '" type="text" inputmode="decimal" autocomplete="off" maxlength="9" placeholder="' + (o.totalMode === 'calc' ? 'calculated' : 'by hand') + '" value="' + e(tv == null ? '' : tv) + '">' +
+        (r.final != null ? '<button type="button" class="btn sm link" data-act="total-calc" data-arg="' + r.idx + '" data-val="' + e(String(r.final)) + '">Type ' + e(fmt(r.final, 3)) + '</button>' : '') + '</div>' +
         '<div class="give" data-live="give-' + r.idx + '">' + p.give + '</div><div class="adm">' + e(r.admin) + (r.note ? ' ' + e(r.note) : '') + '</div><div class="alerts" data-live="alerts-' + r.idx + '">' + p.alerts + '</div></div>';
     }).join('');
   }
@@ -3001,13 +3676,16 @@ details.more > summary { cursor: pointer; font-weight: 500; color: var(--teal); 
     const C = A.C, o = C.order;
     if (!o) return head('', 'Protocol') + '<div class="body"><p class="note">Choose a regimen in step 3. The protocol, the doses and the documents are built here as you enter the patient and the blood tests.</p><p class="hint">Library of ' + STP.REGIMENS.length + ' regimens across ' + Object.keys(STP.SITES).length + ' tumor sites; data of ' + e(STP.fmtDate(STP.DATA_DATE)) + '.</p></div>';
     const reg = o.regimen, up = reg.up && STP.regimenById(reg.up), down = reg.down && STP.regimenById(reg.down);
-    let h = head('', reg.name, chip(CHECK_SHORT[o.check.status], CHECK_TONE[o.check.status])) + '<div class="body"><p>' + e(o.site.name) + ' · ' + e(reg.sub) + ' · ' + e(reg.intent) + (reg.biomarker ? ' · biomarker: ' + e(reg.biomarker) : '') + '</p><div class="row">' + reg.cls.map(c => chip(CLS[c], 'teal')).join('') + chip(STAGE[reg.stage]) + '</div>';
+    let h = head('', reg.name, chip(CHECK_SHORT[o.check.status], CHECK_TONE[o.check.status])) + '<div class="body"><p>' + e(o.site.name) + ' · ' + e(A.subtypeFor(reg) || reg.sub) + ' · ' + e(reg.intent) + (reg.detail ? ' · ' + e(reg.detail) : '') + (reg.biomarker ? ' · biomarker: ' + e(reg.biomarker) : '') + '</p><div class="row">' + reg.cls.map(c => chip(CLS[c], 'teal')).join('') + chip(STAGE[reg.stage]) + '</div>';
     h += '<div data-live="verify">' + verifyBox() + '</div>';
     if (reg.phases.length > 1) h += '<div class="fld"><span class="lbl">Phase of the regimen</span>' + A.seg('Phase of the regimen', 'phaseIndex', reg.phases.map((p, i) => [i, p.label])) + '</div>';
     h += '<div class="fields">' + A.field('Cycle number', 'cycle', {mode: 'numeric', max: 3}) + A.field('Day 1 of this cycle', 'startDate', {type: 'date'}) + '</div><div data-live="dayfld">' + dayField() + '</div>';
     h += '<div class="fld"><span class="lbl">Dose level</span>' + A.seg('Dose level', 'level', [[0, 'Full dose'], [1, 'Level −1'], [2, 'Level −2'], [3, 'Level −3']]) + '</div>';
     if (up || down) h += '<div class="fld"><span class="lbl">Regimen intensity</span><div class="row">' + (down ? '<button type="button" class="btn sm" data-act="pick" data-arg="' + e(down.id) + '">Non-escalated: ' + e(down.name) + '</button>' : '') + chip('Now: ' + (reg.escalated ? 'escalated' : reg.reduced ? 'lower intensity' : 'standard'), 'teal') + (up ? '<button type="button" class="btn sm" data-act="pick" data-arg="' + e(up.id) + '">Escalated: ' + e(up.name) + '</button>' : '') + '</div></div>';
-    h += '<div data-live="status">' + statusBox() + '</div><h3 class="sub">Systemic therapy order</h3><div class="doses" data-live="rows">' + rowsHtml() + '</div><div data-live="cautions">' + cautionsHtml() + '</div></div>';
+    h += '<div data-live="status">' + statusBox() + '</div><h3 class="sub">Systemic therapy order</h3><div class="fields wide">' + A.select('Total dose on the printed order', 'cfg.totalMode', Object.keys(STP.TOTAL_MODES).map(m => [m, STP.TOTAL_MODES[m]]), {rerender: true}) + '</div>' +
+      '<p class="hint">Each drug has one space for the dose per m² (or per kg, AUC or fixed dose) and one for the total dose. Type the total dose here for fine tuning, or leave it empty: the order then prints an empty space to fill in by hand.</p>' +
+      '<div class="doses" data-live="rows">' + rowsHtml() + '</div><div data-live="cautions">' + cautionsHtml() + '</div>' +
+      '<div class="row"><button type="button" class="btn" data-act="copy-protocol">Export this protocol to OncoFile</button><button type="button" class="btn" data-act="import" data-arg="protocol">Import a protocol from OncoFile</button></div></div>';
     return h;
   };
 
@@ -3016,7 +3694,7 @@ details.more > summary { cursor: pointer; font-weight: 500; color: var(--teal); 
     const o = A.C.order;
     const table = (title, rows, empty) => '<h3 class="sub">' + e(title) + '</h3><div class="tw"><table class="t stack"><thead><tr><th>#</th><th>Medication, dose and timing</th><th>Why it is given</th></tr></thead><tbody>' +
       (rows.length ? rows.map((m, i) => '<tr><td class="n">' + (i + 1) + '</td><td>' + e(m.t) + (m.drug ? ' ' + chip('for ' + m.drug) : '') + '</td><td class="why">' + e(m.why || '') + '</td></tr>').join('') : '<tr><td class="n">—</td><td colspan="2">' + e(empty) + '</td></tr>') + '</tbody></table></div>';
-    return '<p class="hint">Emetic risk of day ' + o.day + ': ' + e(STP.EMET_NAMES[o.risk] || o.risk) + '.</p>' + table('Before treatment (day ' + o.day + ')', o.pre, 'No routine pre-medication for this treatment day.') + table('After treatment and to take home', o.post.concat([o.gcsf]), '') +
+    return '<p class="hint">Emetic risk of day ' + o.day + ': ' + e(STP.emetName(o.risk)) + '.</p>' + table('Before treatment (day ' + o.day + ')', o.pre, 'No routine pre-medication for this treatment day.') + table('After treatment and to take home', o.post.concat([o.gcsf]), '') +
       '<h3 class="sub">Supportive medication check</h3><ul class="lines">' + o.fixedLines.map(f => '<li>' + chip(/^Indicated/.test(f.value) ? 'Indicated' : /^Consider/.test(f.value) ? 'Consider' : 'Not routine', /^Indicated/.test(f.value) ? 'ok' : /^Consider/.test(f.value) ? 'warn' : '') + '<p>' + e(f.label) + '<small>' + e(f.value) + '</small></p></li>').join('') + '</ul>';
   }
   V['card-meds'] = function () {
@@ -3098,7 +3776,7 @@ details.more > summary { cursor: pointer; font-weight: 500; color: var(--teal); 
       '<div class="fld"><span class="lbl">Contents of the PDF and Word files</span><div class="seg" role="group" aria-label="Contents of the files">' + pb('all', 'Whole protocol') + pb('orders', 'Order tables only') + '</div></div>' +
       '<div class="row"><button type="button" class="btn navy" data-act="export" data-arg="pdf">PDF</button><button type="button" class="btn navy" data-act="export" data-arg="docx">Word</button><button type="button" class="btn navy" data-act="export" data-arg="xlsx">Excel</button></div>' +
       '<div class="row"><button type="button" class="btn primary" data-act="drive"' + (st.drive.busy ? ' disabled' : '') + '>Save to Google Drive</button>' + A.check('Convert Word and Excel to Google Docs and Sheets', 'cfg.convert') + '</div><div data-live="drive">' + driveBox() + '</div>' +
-      '<div class="row"><button type="button" class="btn" data-act="copy-record">Copy the record for OncoFile</button><button type="button" class="btn" data-act="copy-protocol">Copy the protocol for OncoFile</button></div>' +
+      '<div class="row"><button type="button" class="btn" data-act="copy-record">Export the treatment record to OncoFile</button><button type="button" class="btn" data-act="copy-protocol">Export the protocol to OncoFile</button></div>' +
       '<div data-live="docwarn">' + (C.nonLatin.length ? '<p class="note warn">Letters outside the Latin alphabet were typed in ' + e(C.nonLatin.join(', ')) + '. The PDF prints Latin letters only and shows “?” for others. Use the Word file for that text, or type it in English.</p>' : '') + '</div>' +
       '<p class="hint">Each file holds the protocol (A4 portrait), the order in vertical layout (A4 portrait) and the order in horizontal layout (A4 landscape). The watermark and the copyright line are part of every page. OncoFile receives only the short record and the links, not the files.</p>' +
       '<h3 class="sub">Preview of the content</h3><div class="row"><button type="button" class="btn sm" data-act="zoom">' + (A.ui.big ? 'Fit the page to the width' : 'Show at reading size') + '</button></div><div class="preview" data-scroll="preview" data-live="preview">' + STP.renderHtml(C.doc) + '</div></div>';
@@ -3302,7 +3980,7 @@ details.more > summary { cursor: pointer; font-weight: 500; color: var(--teal); 
   /* ---------- buttons ---------- */
   const act = {
     set(el) { const p = el.dataset.path; let v = el.dataset.val; if (p === 'phaseIndex' || p === 'level') v = Number(v) || 0; A.set(p, v); A.afterSet(p); renderAll(); },
-    pick(el) { if (A.chooseRegimen(el.dataset.arg)) { renderAll(); toast('Regimen chosen: ' + A.C.order.regimen.name + '. The protocol is in the Protocol section.'); } },
+    pick(el) { if (A.chooseRegimen(el.dataset.arg, el.dataset.sub)) { renderAll(); toast('Regimen chosen: ' + A.C.order.regimen.name + '. The protocol is in the Protocol section.'); } },
     level(el) { st.level = Math.max(0, Math.min(3, Number(el.dataset.arg) || 0)); renderAll(); },
     zoom() { ui.big = !ui.big; renderAll(); },
     part(el) { ui.part = el.dataset.arg === 'orders' ? 'orders' : 'all'; renderAll(); },
@@ -3311,11 +3989,34 @@ details.more > summary { cursor: pointer; font-weight: 500; color: var(--teal); 
     'staff-add'() { if (st.cfg.staff.length >= 12) { toast('The list holds up to 12 staff members.', 'warn'); return; } st.cfg.staff.push({role: 'Staff member', name: ''}); st.sigs = {}; A.saveCfg(); renderAll(); showSettings('s-role-' + (st.cfg.staff.length - 1)); },
     'staff-del'(el) { const i = Number(el.dataset.arg); if (st.cfg.staff.length <= 1) { toast('Keep at least one staff member.', 'warn'); return; } st.cfg.staff.splice(i, 1); st.sigs = {}; A.saveCfg(); renderAll(); showSettings(); },
     'drive-forget'() { STP.forgetDriveIds(); toast('The folders will be looked up again at the next save.'); },
-    paste() {
-      openModal('paste', dlgHead('Paste from OncoFile') + '<div class="body"><p class="hint">In OncoFile, open the patient’s chemotherapy order and press “Copy for the protocol generator”. Then paste the text here.</p><textarea class="inp" id="paste-text" rows="5" data-focus placeholder="ALKADY-STP1 | file=… | initials=… | age=… | sex=… | wt=… | ht=… | scr=…"></textarea>' +
-        '<p class="hint"><a href="' + ONCOFILE_URL + '" target="_blank" rel="noopener">Open Alkady OncoFile</a></p></div><footer><button type="button" class="btn" data-act="close">Cancel</button><button type="button" class="btn primary" data-act="paste-apply">Fill the form</button></footer>');
+    paste() { act.import(null); },
+    import(el) {
+      const what = el && el.dataset && el.dataset.arg === 'protocol' ? 'protocol' : 'patient';
+      openModal('paste', dlgHead(what === 'protocol' ? 'Import a protocol from OncoFile' : 'Take the patient from OncoFile') + '<div class="body"><p class="hint">' +
+        (what === 'protocol' ? 'In OncoFile open “Chemotherapy protocols” and press “Copy for the generator” on the protocol.' : 'In OncoFile open the patient and press “Protocol generator”: the file number, initials and measurements are copied. The name is not sent.') +
+        ' Then paste here. The page recognizes a patient line and a protocol by itself.</p><textarea class="inp" id="paste-text" rows="5" data-focus placeholder="ALKADY-STP1 | file=… or a protocol copied in OncoFile"></textarea>' +
+        '<div class="row"><button type="button" class="btn sm" data-act="paste-read">Paste from the clipboard</button></div>' +
+        '<p class="hint"><a href="' + ONCOFILE_URL + '" target="_blank" rel="noopener">Open Alkady OncoFile</a></p></div><footer><button type="button" class="btn" data-act="close">Cancel</button><button type="button" class="btn primary" data-act="paste-apply">Import</button></footer>');
     },
-    'paste-apply'() { const r = STP.parsePrefill(($('paste-text') || {}).value || ''); if (!r) { toast('This text was not recognized. Copy it again from OncoFile.', 'warn'); return; } const n = A.applyPrefill(r); closeModal(); renderAll(); toast(n + ' field' + (n === 1 ? ' was' : 's were') + ' filled from OncoFile. Check each value.'); },
+    'paste-read'() {
+      const ta = $('paste-text'), clip = typeof navigator !== 'undefined' && navigator.clipboard;
+      if (!ta || !clip || !clip.readText) { toast('This view cannot read the clipboard. Press and hold in the box and choose Paste.', 'warn'); return; }
+      clip.readText().then(t => { if (!String(t || '').trim()) { toast('The clipboard is empty. Copy in OncoFile first.', 'warn'); return; } ta.value = t; act['paste-apply'](); })
+        .catch(() => toast('The browser did not allow reading the clipboard. Press and hold in the box and choose Paste.', 'warn'));
+    },
+    'paste-apply'() {
+      const text = ($('paste-text') || {}).value || '', r = STP.parsePrefill(text);
+      if (r) { const n = A.applyPrefill(r); closeModal(); renderAll(); toast(n + ' field' + (n === 1 ? ' was' : 's were') + ' filled from OncoFile. Check them against the patient’s file.'); return; }
+      const o = STP.parseProtocolText(text);
+      if (!o) { toast('This text was not recognized. Copy it again in OncoFile.', 'warn'); return; }
+      const res = STP.importProtocol(o);
+      if (!res.reg) { toast(res.warnings.join(' '), 'warn'); return; }
+      st.pick.group = ''; st.pick.site = ''; st.pick.sub = ''; st.pick.q = '';
+      A.chooseRegimen(res.reg.id); closeModal(); renderAll();
+      toast('Protocol “' + res.reg.name + '” was ' + (res.replaced ? 'updated' : 'imported') + ' and chosen. It is a draft until the consultant and the pharmacist record their check.' + (res.warnings.length ? ' ' + res.warnings.join(' ') : ''), res.warnings.length ? 'warn' : '');
+    },
+    'import-del'(el) { const id = el.dataset.arg; if (!STP.removeImported(id)) return; if (st.regimenId === id) { st.regimenId = ''; st.subtype = ''; } renderAll(); toast('The imported protocol was removed from this page. OncoFile keeps its own copy.'); },
+    'total-calc'(el) { const i = el.dataset.arg; st.total[i] = String(el.dataset.val || ''); renderAll(); const f = $('f-total.' + i); if (f) f.focus(); },
     'new-patient'() { openModal('confirm', dlgHead('Start a new patient?') + '<div class="body"><p>The patient, the blood tests, the toxicity record, the ticked medicines, the cycle and the signatures are cleared. The chosen regimen and the settings stay.</p></div><footer><button type="button" class="btn" data-act="close" data-focus>Cancel</button><button type="button" class="btn primary" data-act="new-patient-go">Clear and start</button></footer>'); },
     'new-patient-go'() { A.newPatient(); closeModal(); renderAll(); const f = $('f-pt.code'); if (f) f.focus(); toast('Ready for a new patient.'); },
     verify() { showVerify(); },
@@ -3346,7 +4047,7 @@ details.more > summary { cursor: pointer; font-weight: 500; color: var(--teal); 
       const first = 'ALKADY-STP-RECORD1 | regimen=' + one(o.regimen.name + (o.regimen.phases.length > 1 ? ' — ' + o.phase.label : '')) + ' | cycle=' + o.cycle + ' | day1=' + one(st.startDate);
       copyOut('Record for OncoFile', first + '\n' + STP.recordText(rec) + (rec.signatures.length ? '\nSigned by: ' + rec.signatures.join('; ') : '') + (r ? '' : '\nFiles: not saved to Google Drive for this version.'), 'The record was copied. In OncoFile open the patient’s chemotherapy order and paste it under “Systemic therapy protocol generator”.');
     },
-    'copy-protocol'() { const C = A.C; if (!C.order) return; copyOut('Protocol for OncoFile', JSON.stringify(STP.toOncoFile(C.order), null, 1), 'The protocol was copied. In OncoFile open “Chemotherapy protocols” and press “Paste from the generator”.'); }
+    'copy-protocol'() { const C = A.C; if (!C.order) return; copyOut('Protocol for OncoFile', JSON.stringify(STP.toOncoFile(C.order), null, 1), 'The protocol was copied. In OncoFile open “Chemotherapy protocols” and press “Import from the generator”.'); }
   };
 
   /* ---------- events ---------- */
@@ -3380,7 +4081,7 @@ details.more > summary { cursor: pointer; font-weight: 500; color: var(--teal); 
   root.addEventListener('unhandledrejection', () => { toast('A step did not finish. Try it again.', 'crit'); });
 
   /* ---------- start ---------- */
-  A.loadCfg(); applyTheme();
+  STP.loadImported(); A.loadCfg(); applyTheme();
   try { A.loadDraft(JSON.parse(root.sessionStorage.getItem('stp.draft') || 'null')); } catch (err) { /* no draft */ }
   let filled = 0; const pre = STP.prefillFromHash();
   if (pre) { filled = A.applyPrefill(pre); try { root.history.replaceState(null, '', root.location.pathname + root.location.search); } catch (err) { /* some views do not allow it */ } }
