@@ -12,6 +12,7 @@ Patient criteria sit on the left, the treatment decision on the right; pressing 
 | HER2+ | https://drmohammadsabryelkady1-hub.github.io/alkady-advisor/her2.html |
 | Triple-negative | https://drmohammadsabryelkady1-hub.github.io/alkady-advisor/tn.html |
 | Atlas download: Gastric & Esophageal Cancer Management 2026 | https://drmohammadsabryelkady1-hub.github.io/alkady-advisor/ge-atlas.html |
+| Systemic therapy protocol generator (draft) | https://drmohammadsabryelkady1-hub.github.io/alkady-advisor/protocols.html |
 
 ## Artifact editions
 
@@ -81,3 +82,11 @@ Each page is a single self-contained HTML file that runs in the browser. Nothing
 Decision support for clinicians. It does not replace the multidisciplinary team, clinical judgement or the prescribing information.
 
 Designed & prepared by Prof. Dr. Mohammad Sabry Alkady · © 2026
+
+## Systemic therapy protocol generator
+
+`protocols.html` is the web copy of *Alkady Systemic Therapy Protocols*: it builds a protocol and treatment order for systemic anticancer therapy from the patient's measurements and blood tests, with pre- and post-treatment medication, dose rules, a drug interaction screen, ice cooling and single-room time, staff signatures, and A4 documents in PDF, Word and Excel.
+
+**The regimen library is a draft.** Every document carries a DRAFT banner until a consultant oncologist and a clinical pharmacist of the centre record their check of that regimen against the current guideline and the prescribing information. The page asks search engines not to index it.
+
+The page is one self-contained file built from the generator's source; replace `protocols.html` with a new build and push as described under Publishing. Nothing typed into it is sent anywhere unless a save button is pressed. Uploading to Google Drive from this web copy needs a Google client ID entered under *Staff and settings*; the copy inside claude.ai uses the Google Drive connector instead and needs no setup.
